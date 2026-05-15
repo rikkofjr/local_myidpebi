@@ -6,98 +6,149 @@ global $DB, $USER, $PAGE, $OUTPUT;
 
 require_login();
 
+// 1. Inisialisasi Parameter
 $idp_id = optional_param('id', 0, PARAM_INT);
+
 if (!$idp_id) {
     throw new moodle_exception('missingparameter', 'debug', '', 'ID');
 }
 
-$idp = $DB->get_record_sql("SELECT i.*, u.firstname, u.lastname 
+// 2. Ambil data IDP dan info atasan (NIK diambil dari idnumber)
+$idp = $DB->get_record_sql("SELECT i.*, u.firstname, u.lastname, u.username as nik_atasan
                              FROM {local_myidpebi} i 
                              JOIN {user} u ON i.atasan_id = u.id 
-                             WHERE i.id = ?", [$idp_id], MUST_EXIST);
+                             WHERE i.id = ?", [$idp_id]);
 
+if (!$idp) {
+    die("Error Database: Data IDP tidak ditemukan.");
+}
+
+// 3. Hitung Total JP dari aktivitas yang sudah diverifikasi (tidak didelete)
+$total_jp_verified = 0;
+if ($idp->status == 2) {
+    $total_jp_verified = $DB->get_field_sql("SELECT SUM(jumlah_jp) 
+                                              FROM {local_myidpebi_act} 
+                                              WHERE idp_id = ? AND deleted = 0", [$idp_id]) ?: 0;
+}
+
+// 4. Konfigurasi Halaman & URL
 $url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
-$PAGE->set_title('Rincian Aktivitas');
+$PAGE->set_title('Rincian Aktivitas IDP');
 $PAGE->set_heading($idp->nama_idp);
 
-// Logika Soft Delete
+// 5. Breadcrumb Navigasi
+$PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'));
+$PAGE->navbar->add('Rincian Aktivitas');
+
+// --- LOGIKA ACTION ---
 $delete_act = optional_param('delete_act', 0, PARAM_INT);
 if ($delete_act && confirm_sesskey()) {
     $DB->set_field('local_myidpebi_act', 'deleted', 1, ['id' => $delete_act, 'idp_id' => $idp_id]);
-    redirect($url, 'Aktivitas telah dibatalkan.');
+    redirect($url, 'Aktivitas berhasil dibatalkan.');
 }
 
-// Logika Approval & Verifikasi
-if ($approve = optional_param('approve', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
+if (optional_param('approve', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
     $idp->status = 1; 
     $DB->update_record('local_myidpebi', $idp);
-    redirect($url, 'IDP disetujui!');
+    redirect($url, 'IDP telah disetujui.');
 }
 
-if ($verify = optional_param('verify', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
+if (optional_param('verify', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
     $idp->status = 2; 
     $DB->update_record('local_myidpebi', $idp);
-    redirect($url, 'IDP diverifikasi selesai!');
+    redirect($url, 'IDP telah diverifikasi selesai.');
 }
 
 echo $OUTPUT->header();
 
-// Info IDP
-echo '<div class="card mb-4 shadow-sm"><div class="card-body">';
+// --- TAMPILAN DETAIL INFORMASI IDP ---
+echo '<div class="card mb-4 border-left-primary shadow-sm"><div class="card-body">';
 $status_info = local_myidpebi_get_status_info($idp->status);
-echo "<h5>{$idp->nama_idp}</h5>";
-echo "<p>Status: {$status_info->badge}</p>";
 
+echo "<h4 class='text-primary mb-3'><i class='fa fa-folder-open'></i> {$idp->nama_idp}</h4>";
+
+echo '<div class="row">';
+echo '  <div class="col-md-12">';
+echo '      <div class="mb-2"><strong>Status:</strong><br>' . $status_info->badge . '</div>';
+echo '      <div class="mb-2"><strong>Atasan / Coach:</strong><br>' . ($idp->nik_atasan ?: '-') . ' - ' . $idp->firstname . ' ' . $idp->lastname . '</div>';
+echo '      <div class="mb-2"><strong>Periode Program:</strong><br>' . userdate($idp->mulai_date, '%d %b %Y') . ' s/d ' . userdate($idp->akhir_date, '%d %b %Y') . '</div>';
+echo '      <div class="mb-2 ' . ($idp->status == 2 ? 'text-success' : 'text-muted') . '">';
+echo '          <strong>Total JP Terverifikasi:</strong><br>';
+echo '          <span class="h5 font-weight-bold">' . $total_jp_verified . ' JP</span>';
+if ($idp->status < 2) {
+    echo ' <small>(Akan dihitung setelah verifikasi selesai)</small>';
+}
+echo '      </div>';
+echo '</div>';
+
+// Tombol Aksi Atasan dengan Konfirmasi
 if ($USER->id == $idp->atasan_id) {
+    echo '<div class="mt-4 p-3 border-top bg-light text-right">';
     if ($idp->status == 0) {
-        echo '<a href="'.new moodle_url($url, ['approve'=>1, 'sesskey'=>sesskey()]).'" class="btn btn-primary">Setujui Program</a>';
+        $approve_url = new moodle_url($url, ['approve' => 1, 'sesskey' => sesskey()]);
+        $confirm_msg = "Apakah Anda yakin ingin MENYETUJUI program IDP ini untuk segera dilaksanakan?";
+        echo '<a href="'.$approve_url.'" class="btn btn-primary" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check"></i> Setujui Program</a>';
     } else if ($idp->status == 1) {
-        echo '<a href="'.new moodle_url($url, ['verify'=>1, 'sesskey'=>sesskey()]).'" class="btn btn-success">Verifikasi Selesai</a>';
+        $verify_url = new moodle_url($url, ['verify' => 1, 'sesskey' => sesskey()]);
+        $confirm_msg = "Apakah Anda yakin ingin memverifikasi bahwa program IDP ini telah SELESAI?";
+        echo '<a href="'.$verify_url.'" class="btn btn-success" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-flag-checkered"></i> Verifikasi Selesai</a>';
     }
+    echo '</div>';
 }
 echo '</div></div>';
 
-// Judul & Tombol Tambah (Tetap Muncul di Status 0 dan 1)
-echo '<div class="d-flex justify-content-between align-items-center mb-2">';
-echo '<h4>Daftar Aktivitas</h4>';
+// --- DAFTAR AKTIVITAS ---
+echo '<div class="d-flex justify-content-between align-items-center mb-3">';
+echo '  <h4 class="m-0">Rincian Aktivitas</h4>';
+
 if ($idp->status < 2 && $USER->id == $idp->userid) {
     $add_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
     echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
 }
 echo '</div>';
 
-// Load aktivitas: Urutkan agar yang deleted tampil di paling bawah
 $activities = $DB->get_records('local_myidpebi_act', ['idp_id' => $idp_id], 'deleted ASC, id ASC');
 
-echo '<table class="table table-bordered">
-        <thead><tr class="bg-light"><th>Jenis</th><th>Aktivitas</th><th>JP</th><th>Waktu</th><th>Evidence</th><th>Aksi</th></tr></thead>
+echo '<div class="table-responsive">';
+echo '<table class="table table-bordered table-hover shadow-sm">';
+echo '  <thead class="thead-light text-center">
+            <tr>
+                <th>Jenis</th>
+                <th>Aktivitas</th>
+                <th>JP</th>
+                <th>Waktu</th>
+                <th>Evidence</th>
+                <th width="120">Aksi</th>
+            </tr>
+        </thead>
         <tbody>';
 
 if ($activities) {
     foreach ($activities as $a) {
         $is_deleted = ($a->deleted == 1);
-        $style = $is_deleted ? 'class="table-secondary text-muted" style="text-decoration: line-through;"' : '';
+        $row_class = $is_deleted ? 'table-secondary text-muted' : '';
+        $text_style = $is_deleted ? 'style="text-decoration: line-through;"' : '';
         
         $file_link = "-";
         if (!$is_deleted) {
             $fs = get_file_storage();
-            $files = $fs->get_area_files(context_system::instance()->id, 'local_myidpebi', 'evidence', $a->id, 'itemid', false);
+            $files = $fs->get_area_files(context_system::instance()->id, 'local_myidpebi', 'evidence', $a->id, 'itemid, filepath, filename', false);
             if ($files) {
                 $file = reset($files);
                 $furl = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(), $file->get_itemid(), $file->get_filepath(), $file->get_filename());
-                $file_link = '<a href="'.$furl.'" target="_blank" class="btn btn-sm btn-info">Lihat File</a>';
+                $file_link = '<a href="'.$furl.'" target="_blank" class="btn btn-sm btn-info"><i class="fa fa-download"></i> File</a>';
             }
         }
 
-        echo "<tr ".($is_deleted ? 'class="table-secondary"' : '').">
-                <td $style>{$a->jenis_kegiatan}</td>
-                <td $style>{$a->nama_activity}</td>
-                <td $style>{$a->jumlah_jp}</td>
-                <td $style>{$a->waktu_teks}</td>
-                <td class='text-center'>{$file_link}</td>
-                <td class='text-center'>";
+        echo "<tr class='{$row_class}'>";
+        echo "  <td {$text_style} class='text-center'>{$a->jenis_kegiatan}</td>";
+        echo "  <td {$text_style}>{$a->nama_activity}</td>";
+        echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp}</td>";
+        echo "  <td {$text_style}>{$a->waktu_teks}</td>";
+        echo "  <td class='text-center'>{$file_link}</td>";
+        echo "  <td class='text-center'>";
         
         if ($idp->status < 2 && $USER->id == $idp->userid && !$is_deleted) {
             $edit_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id, 'act_id' => $a->id]);
@@ -106,10 +157,15 @@ if ($activities) {
             echo "<a href='{$del_url}' class='btn btn-sm btn-danger' onclick='return confirm(\"Batalkan aktivitas ini?\")'><i class='fa fa-trash'></i></a>";
         } else if ($is_deleted) {
             echo '<span class="badge badge-secondary">Dibatalkan</span>';
+        } else {
+            echo '<i class="fa fa-lock text-muted"></i>';
         }
-        echo "</td></tr>";
+        echo "  </td>";
+        echo "</tr>";
     }
+} else {
+    echo '<tr><td colspan="6" class="text-center text-muted p-4">Belum ada rincian aktivitas.</td></tr>';
 }
-echo '</tbody></table>';
 
+echo '  </tbody></table></div>';
 echo $OUTPUT->footer();
