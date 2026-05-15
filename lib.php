@@ -78,7 +78,7 @@ function local_myidpebi_pluginfile($course, $cm, $context, $filearea, $args, $fo
     $idp = $DB->get_record('local_myidpebi', array('id' => $activity->idp_id), '*', MUST_EXIST);
 
     $is_admin = is_siteadmin();
-    $is_owner = ($idp->userid == $USER->id);gi
+    $is_owner = ($idp->userid == $USER->id);
     $is_atasan = ($idp->atasan_id == $USER->id);
 
     if (!$is_admin && !$is_owner && !$is_atasan) {
