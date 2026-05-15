@@ -26,6 +26,7 @@
                 <FIELD NAME="jumlah_jp" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="waktu_teks" TYPE="char" LENGTH="255" NOTNULL="true"/>
                 <FIELD NAME="evidence_fileid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0"/>
+                <FIELD NAME="deleted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=Aktif, 1=Dibatalkan"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
