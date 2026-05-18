@@ -42,7 +42,7 @@ echo '<div class="d-flex justify-content-end mb-3">';
             if (is_siteadmin() || $is_manager) {
                 echo '<div class="mb-2"><a href="admin_monitor.php" class="btn btn-danger btn-block">PANEL ADMINISTRATOR GLOBAL</a></div>';
             }
-echo '<a href="manage.php" class="btn btn-outline-primary">Halaman Approval Atasan</a></div>';
+echo '<a href="manage.php" class="btn btn-outline-primary">Halaman Approval</a></div>';
 
 // --- 2. LOGIKA FORM (INSERT & UPDATE) ---
 $mform = new \local_myidpebi\forms\idp_form();

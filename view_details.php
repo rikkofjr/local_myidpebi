@@ -13,10 +13,23 @@ if (!$idp_id) {
     throw new moodle_exception('missingparameter', 'debug', '', 'ID');
 }
 
-// 2. Ambil data IDP dan info atasan (NIK diambil dari idnumber)
-$idp = $DB->get_record_sql("SELECT i.*, u.firstname, u.lastname, u.username as nik_atasan
+// 2. Ambil data IDP, info Pembimbing (atasan_id), serta Atasan Langsung dari Custom Profile Field
+$idp = $DB->get_record_sql("SELECT i.*, 
+                                   p.firstname as p_fname, p.lastname as p_lname, p.username as p_nik,
+                                   k.firstname as k_fname, k.lastname as k_lname,
+                                   al.id as atasan_langsung_id, al.firstname as al_fname, al.lastname as al_lname, al.username as al_nik,
+                                   app.firstname as app_fname, app.lastname as app_lname, app.username as app_nik,
+                                   vif.firstname as vif_fname, vif.lastname as vif_lname, vif.username as vif_nik
                              FROM {local_myidpebi} i 
-                             JOIN {user} u ON i.atasan_id = u.id 
+                             JOIN {user} k ON i.userid = k.id
+                             JOIN {user} p ON i.atasan_id = p.id 
+                             /* Join custom profile field karyawan untuk mencari NIK Atasan Langsung */
+                             LEFT JOIN {user_info_data} uid ON uid.userid = k.id
+                             LEFT JOIN {user_info_field} uif ON uid.fieldid = uif.id AND uif.shortname = 'atasan_langsung'
+                             /* Map NIK tersebut ke user Moodle asli */
+                             LEFT JOIN {user} al ON al.username = uid.data
+                             LEFT JOIN {user} app ON i.approved_by = app.id
+                             LEFT JOIN {user} vif ON i.verified_by = vif.id
                              WHERE i.id = ?", [$idp_id]);
 
 if (!$idp) {
@@ -49,21 +62,27 @@ if ($delete_act && confirm_sesskey()) {
     redirect($url, 'Aktivitas berhasil dibatalkan.');
 }
 
-if (optional_param('approve', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
+// Validasi Hak Otorisasi "ATAU" (Pembimbing Terpilih ATAU Atasan Langsung Profil)
+$is_pembimbing = ($USER->id == $idp->atasan_id);
+$is_atasan_langsung = (!empty($idp->atasan_langsung_id) && $USER->id == $idp->atasan_langsung_id);
+
+if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
     $idp->status = 1; 
+    $idp->approved_by = $USER->id; // Log Audit Trail
     $DB->update_record('local_myidpebi', $idp);
     redirect($url, 'IDP telah disetujui.');
 }
 
-if (optional_param('verify', 0, PARAM_INT) && $USER->id == $idp->atasan_id && confirm_sesskey()) {
+if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
     $idp->status = 2; 
+    $idp->verified_by = $USER->id; // Log Audit Trail
     $DB->update_record('local_myidpebi', $idp);
     redirect($url, 'IDP telah diverifikasi selesai.');
 }
 
 echo $OUTPUT->header();
 
-// --- TAMPILAN DETAIL INFORMASI IDP ---
+// --- TAMPILAN DETAIL INFORMASI IDP (100% Sesuai UI/UX Anda) ---
 echo '<div class="card mb-4 border-left-primary shadow-sm"><div class="card-body">';
 $status_info = local_myidpebi_get_status_info($idp->status);
 
@@ -72,7 +91,8 @@ echo "<h4 class='text-primary mb-3'><i class='fa fa-folder-open'></i> {$idp->nam
 echo '<div class="row">';
 echo '  <div class="col-md-12">';
 echo '      <div class="mb-2"><strong>Status:</strong><br>' . $status_info->badge . '</div>';
-echo '      <div class="mb-2"><strong>Atasan / Coach:</strong><br>' . ($idp->nik_atasan ?: '-') . ' - ' . $idp->firstname . ' ' . $idp->lastname . '</div>';
+echo '      <div class="mb-2"><strong>Pembimbing / Coach:</strong><br>' . ($idp->p_nik ?: '-') . ' - ' . $idp->p_fname . ' ' . $idp->p_lname . '</div>';
+echo '      <div class="mb-2"><strong>Atasan Langsung (Sistem):</strong><br>' . ($idp->al_nik ?: '-') . ' - ' . $idp->al_fname . ' ' . $idp->al_lname . '</div>';
 echo '      <div class="mb-2"><strong>Periode Program:</strong><br>' . userdate($idp->mulai_date, '%d %b %Y') . ' s/d ' . userdate($idp->akhir_date, '%d %b %Y') . '</div>';
 echo '      <div class="mb-2 ' . ($idp->status == 2 ? 'text-success' : 'text-muted') . '">';
 echo '          <strong>Total JP Terverifikasi:</strong><br>';
@@ -81,10 +101,24 @@ if ($idp->status < 2) {
     echo ' <small>(Akan dihitung setelah verifikasi selesai)</small>';
 }
 echo '      </div>';
+
+// Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
+if ($idp->status > 0) {
+    echo '<div class="mt-3 p-2 bg-light border rounded small">';
+    echo '  <h6 class="text-secondary font-weight-bold mb-1"><i class="fa fa-history"></i> Riwayat Persetujuan Sistem:</h6>';
+    if (!empty($idp->approved_by)) {
+        echo "  <div class='text-muted'>• Disetujui oleh: <strong>{$idp->app_nik} - {$idp->app_fname} {$idp->app_lname}</strong></div>";
+    }
+    if (!empty($idp->verified_by)) {
+        echo "  <div class='text-muted'>• Diverifikasi oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
+    }
+    echo '</div>';
+}
+
 echo '</div>';
 
-// Tombol Aksi Atasan dengan Konfirmasi
-if ($USER->id == $idp->atasan_id) {
+// Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
+if ($is_pembimbing || $is_atasan_langsung) {
     echo '<div class="mt-4 p-3 border-top bg-light text-right">';
     if ($idp->status == 0) {
         $approve_url = new moodle_url($url, ['approve' => 1, 'sesskey' => sesskey()]);
@@ -104,6 +138,14 @@ echo '<div class="d-flex justify-content-between align-items-center mb-3">';
 echo '  <h4 class="m-0">Rincian Aktivitas</h4>';
 
 if ($idp->status < 2 && $USER->id == $idp->userid) {
+    // $add_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
+    // // Jika status = 1 (Proses), beri tanda act_id = -1 ke URL untuk memberi tahu halaman edit_activity agar membuka gerbang JP
+    // if ($idp->status == 1) {
+    //     $add_url->param('act_id', -1);
+    // }
+    // echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
+    
+    //gunakan dibawah ini
     $add_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
     echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
 }

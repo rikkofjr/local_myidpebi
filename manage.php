@@ -17,8 +17,8 @@ if ($status_filter !== -1) $url->param('status_filter', $status_filter);
 
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
-$PAGE->set_title('Monitoring IDP Bawahan');
-$PAGE->set_heading('Daftar IDP Bawahan');
+$PAGE->set_title('Daftar Bimbingan IDP');
+$PAGE->set_heading('Daftar Bimbingan IDP');
 
 echo $OUTPUT->header();
 
@@ -120,7 +120,7 @@ if ($records) {
 
     echo $OUTPUT->paging_bar($total_records, $page_num, $per_page, $url);
 } else {
-    echo $OUTPUT->notification('Tidak ada data IDP bawahan yang sesuai kriteria.', 'info');
+    echo $OUTPUT->notification('Tidak ada data bimbingan IDP.', 'info');
 }
 
 echo '<div class="mt-3"><a href="index.php" class="btn btn-secondary">Kembali ke Dashboard Saya</a></div>';

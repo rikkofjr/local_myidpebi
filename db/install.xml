@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/myidpebi/db" VERSION="20260513" COMMENT="Tabel IDP EBI Lengkap">
+<XMLDB PATH="local/myidpebi/db" VERSION="20260518" COMMENT="Tabel IDP EBI Lengkap dengan Audit Trail Pembimbing">
     <TABLES>
         <TABLE NAME="local_myidpebi" COMMENT="Data Utama IDP">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="atasan_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="atasan_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID User Moodle yang ditunjuk sebagai Pembimbing"/>
                 <FIELD NAME="nama_idp" TYPE="char" LENGTH="255" NOTNULL="true"/>
                 <FIELD NAME="mulai_date" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="akhir_date" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="status" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0"/>
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="approved_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang menyetujui program"/>
+                <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

@@ -23,8 +23,7 @@ $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title($act_id ? 'Edit Aktivitas' : 'Tambah Aktivitas');
 
-// Inisialisasi Form
-// Kita kirimkan act_id ke form untuk logika freeze yang lebih cerdas
+// 1. Inisialisasi Form TERLEBIH DAHULU agar elemen 'evidence_file' terdaftar di sistem Moodle Form
 $mform = new \local_myidpebi\forms\act_form($url->out(false), [
     'status' => $idp->status,
     'act_id' => $act_id
@@ -32,6 +31,23 @@ $mform = new \local_myidpebi\forms\act_form($url->out(false), [
 
 if ($act_id) {
     $existing_act = $DB->get_record('local_myidpebi_act', ['id' => $act_id, 'idp_id' => $idp_id], '*', MUST_EXIST);
+    
+    // 2. Sekarang aman untuk memanggil draft item ID karena form dan elemen 'evidence_file' sudah eksis
+    $draftitemid = file_get_submitted_draft_itemid('evidence_file');
+    
+    // 3. Salin file dari storage permanen 'evidence' ke area kerja sementara (draft)
+    file_prepare_draft_area(
+        $draftitemid, 
+        context_system::instance()->id, 
+        'local_myidpebi', 
+        'evidence', // Nama area file di database Anda
+        $existing_act->id, 
+        ['subdirs' => 0, 'maxbytes' => 2048*1024, 'maxfiles' => 1]
+    );
+    
+    // 4. Melekatkan ID draft ke properti 'evidence_file' agar form mengenali datanya
+    $existing_act->evidence_file = $draftitemid;
+    
     $mform->set_data($existing_act);
 } else {
     $mform->set_data(['idp_id' => $idp_id]);
@@ -43,17 +59,19 @@ if ($mform->is_cancelled()) {
     $act = new stdClass();
     $act->idp_id = $idp_id;
     
-    // Logika Simpan: Jika Tambah Baru, ambil field rencana. Jika Edit, field rencana tidak berubah (karena di freeze)
+    // Logika Rencana
     if (!$act_id || $idp->status == 0) {
         $act->jenis_kegiatan = $data->jenis_kegiatan;
         $act->nama_activity  = $data->nama_activity;
         $act->waktu_teks     = $data->waktu_teks;
     }
 
+    // Logika Realisasi JP
     if ($idp->status == 1) {
         $act->jumlah_jp = $data->jumlah_jp;
     }
 
+    // Eksekusi CRUD Database
     if ($act_id) {
         $act->id = $act_id;
         $DB->update_record('local_myidpebi_act', $act);
@@ -65,16 +83,28 @@ if ($mform->is_cancelled()) {
         $current_id = $DB->insert_record('local_myidpebi_act', $act);
     }
 
-    // Evidence
+    // --- MANAJEMEN PENYIMPANAN BERKAS FISIK ---
     if ($idp->status == 1) {
-        $draftitemid = file_get_submitted_draft_itemid('evidence_file');
+        // Ambil data ID folder draf dari objek $data->evidence_file
+        $draftitemid = isset($data->evidence_file) ? $data->evidence_file : 0;
+        
         if ($draftitemid) {
-            file_save_draft_area_files($draftitemid, context_system::instance()->id, 'local_myidpebi', 'evidence', $current_id, ['subdirs' => 0]);
+            // Pindahkan file dari area draf kembali ke storage utama 'evidence' Moodle secara permanen
+            file_save_draft_area_files(
+                $draftitemid, 
+                context_system::instance()->id, 
+                'local_myidpebi', 
+                'evidence', 
+                $current_id, 
+                ['subdirs' => 0, 'maxbytes' => 2048*1024, 'maxfiles' => 1]
+            );
+            
+            // Simpan reference ID draf ke kolom database
             $DB->set_field('local_myidpebi_act', 'evidence_fileid', $draftitemid, ['id' => $current_id]);
         }
     }
 
-    redirect(new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]), "Tersimpan.");
+    redirect(new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]), "Aktivitas berhasil disimpan.");
 }
 
 echo $OUTPUT->header();
