@@ -18,9 +18,24 @@ class idp_form extends \moodleform {
         $mform->setType('nama_idp', PARAM_TEXT);
         $mform->addRule('nama_idp', null, 'required', null, 'client');
 
-        // Mengubah istilah tampilan menjadi NIK Pembimbing
-        $mform->addElement('text', 'nik_atasan', 'NIK Pembimbing / Coach');
-        $mform->setType('nik_atasan', PARAM_RAW);
+        // --- AMBIL DATA USER UNTUK AUTOCOMPLETE LOKAL ---
+        // Mengambil daftar semua user aktif di Moodle
+        $users = $DB->get_records_menu('user', ['deleted' => 0, 'suspended' => 0], 'firstname', 'id, ' . $DB->sql_fullname());
+        $options = [];
+        foreach ($users as $userid => $fullname) {
+            $username = $DB->get_field('user', 'username', ['id' => $userid]);
+            // Value dropdown diatur menggunakan 'username' (NIK) agar 100% cocok dengan variabel nik_atasan Anda
+            $options[$username] = $fullname . ' (' . $username . ')';
+        }
+
+        // Pengaturan Autocomplete berbasis data lokal (Aman dari kendala hak akses/permissions)
+        $autocomplete_options = [
+            'multiple' => false,
+            'placeholder' => 'Ketik Nama atau NIK Pembimbing...',
+        ];
+
+        // MEMPERTAHANKAN NAMA ELEMEN ASLI ANDA: 'nik_atasan'
+        $mform->addElement('autocomplete', 'nik_atasan', 'NIK Pembimbing', $options, $autocomplete_options);
         $mform->addRule('nik_atasan', null, 'required', null, 'client');
         $mform->addHelpButton('nik_atasan', 'help_pembimbing', 'local_myidpebi');
 
@@ -32,6 +47,7 @@ class idp_form extends \moodleform {
 
     /**
      * Mengatur data bawaan form, otomatis mengambil NIK Atasan Langsung dari Custom Profile Field
+     * KODE ASLI ANDA TETAP UTUH 100%
      */
     public function set_data($data) {
         global $DB, $USER;
@@ -53,7 +69,23 @@ class idp_form extends \moodleform {
                 $data->nik_atasan = trim($atasan_langsung_nik);
             }
         }
-        
-        return parent::set_data($data);
+
+        parent::set_data($data);
+    }
+
+    /**
+     * VALIDASI FORM TAMBAHAN:
+     * Menghadang karyawan agar tidak memasukkan NIK diri sendiri
+     */
+    public function validation($data, $files) {
+        global $USER;
+        $errors = parent::validation($data, $files);
+
+        // Memeriksa jika NIK (username) yang dipilih sama dengan NIK user yang sedang login
+        if (isset($data['nik_atasan']) && trim($data['nik_atasan']) === $USER->username) {
+            $errors['nik_atasan'] = 'Anda tidak diperbolehkan memilih diri Anda sendiri sebagai Pembimbing/Coach.';
+        }
+
+        return $errors;
     }
 }

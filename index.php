@@ -84,7 +84,7 @@ if ($fromform = $mform->get_data()) {
             $data->status = 0;
             $data->timecreated = time();
             $DB->insert_record('local_myidpebi', $data);
-            $msg = 'Program IDP berhasil dibuat.';
+            $msg = 'Program IDP berhasil dibuat, silahkan minta pembimbing anda untuk approval';
         }
         redirect($url, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
     }
@@ -112,7 +112,7 @@ $records = $DB->get_records_sql($sql, $params, $page_num * $per_page, $per_page)
 if ($records) {
     echo $OUTPUT->paging_bar($total_records, $page_num, $per_page, $url);
     echo '<table class="table table-bordered table-striped"><thead><tr>';
-    echo '<th>Nama Kegiatan</th><th>Atasan</th><th>Mulai</th><th>Target</th><th>Total JP</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+    echo '<th>Nama Kegiatan</th><th>Pembimbing</th><th>Mulai</th><th>Target</th><th>Total JP</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
     
     foreach ($records as $idp) {
         $display_jp = $idp->total_jp ?: 0;

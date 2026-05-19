@@ -105,6 +105,7 @@ if ($records) {
     foreach ($records as $idp) {
         $status_info = local_myidpebi_get_status_info($idp->status);
         $view_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp->id]);
+        $edit_url = new moodle_url('/local/myidpebi/admin_edit_idp.php', ['id' => $idp->id]);
         
         // Ikon kunci untuk status Verified
         $lock_icon = ($idp->status == 2) ? ' <i class="fa fa-lock text-muted" title="Data Terkunci"></i>' : '';
@@ -121,7 +122,10 @@ if ($records) {
         // Total JP hanya muncul angka jika status 2 (Verified)
         echo "<td><strong>" . ($idp->status == 2 ? ($idp->total_jp ?: 0) : '-') . "</strong></td>";
         
-        echo "<td><a href='{$view_url}' class='btn btn-sm btn-info'><i class='fa fa-eye'></i> </a></td>";
+        echo "<td>
+            <a href='{$view_url}' class='btn btn-sm btn-info'><i class='fa fa-eye'></i> </a>
+            <a href='{$edit_url}' class='btn btn-sm btn-warning'><i class='fa fa-pencil'></i> </a>
+        </td>";
         echo '</tr>';
     }
     echo '</tbody></table>';
