@@ -15,7 +15,7 @@ if (!is_siteadmin() && !has_capability('moodle/site:viewreports', $context)) {
 // 2. Inisialisasi Parameter
 $page_num      = optional_param('page', 0, PARAM_INT);
 //Jumlah list per halaman
-$per_page      = 2; 
+$per_page      = 30; 
 $search        = optional_param('search', '', PARAM_TEXT);
 $status_filter = optional_param('status_filter', -1, PARAM_INT);
 
