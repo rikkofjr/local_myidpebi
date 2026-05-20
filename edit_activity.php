@@ -7,8 +7,9 @@ global $DB, $USER, $PAGE, $OUTPUT;
 
 require_login();
 
-$idp_id = required_param('idp_id', PARAM_INT);
-$act_id = optional_param('act_id', 0, PARAM_INT);
+$idp_id   = required_param('idp_id', PARAM_INT);
+$act_id   = optional_param('act_id', 0, PARAM_INT);
+$is_clone = optional_param('is_clone', 0, PARAM_INT); // Menangkap parameter mode duplikasi
 
 $idp = $DB->get_record('local_myidpebi', ['id' => $idp_id], '*', MUST_EXIST);
 
@@ -18,10 +19,11 @@ if ($idp->userid != $USER->id || $idp->status >= 2) {
 
 $url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
 if ($act_id) { $url->param('act_id', $act_id); }
+if ($is_clone) { $url->param('is_clone', $is_clone); }
 
 $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
-$PAGE->set_title($act_id ? 'Edit Aktivitas' : 'Tambah Aktivitas');
+$PAGE->set_title($act_id ? ($is_clone ? 'Duplikat Aktivitas' : 'Edit Aktivitas') : 'Tambah Aktivitas');
 
 // 1. Inisialisasi Form TERLEBIH DAHULU agar elemen 'evidence_file' terdaftar di sistem Moodle Form
 $mform = new \local_myidpebi\forms\act_form($url->out(false), [
@@ -30,27 +32,54 @@ $mform = new \local_myidpebi\forms\act_form($url->out(false), [
 ]);
 
 if ($act_id) {
-    $existing_act = $DB->get_record('local_myidpebi_act', ['id' => $act_id, 'idp_id' => $idp_id], '*', MUST_EXIST);
+    $activity = $DB->get_record('local_myidpebi_act', ['id' => $act_id], '*', MUST_EXIST);
+    $form_data = new stdClass();
     
-    // 2. Sekarang aman untuk memanggil draft item ID karena form dan elemen 'evidence_file' sudah eksis
-    $draftitemid = file_get_submitted_draft_itemid('evidence_file');
+    // Logika Duplikasi: Jika mode clone aktif, kosongkan ID agar Moodle membuat baris baru
+    if ($is_clone) {
+        $form_data->id = 0;
+    } else {
+        $form_data->id = $activity->id;
+    }
     
-    // 3. Salin file dari storage permanen 'evidence' ke area kerja sementara (draft)
-    file_prepare_draft_area(
-        $draftitemid, 
-        context_system::instance()->id, 
-        'local_myidpebi', 
-        'evidence', // Nama area file di database Anda
-        $existing_act->id, 
-        ['subdirs' => 0, 'maxbytes' => 2048*1024, 'maxfiles' => 1]
-    );
+    $form_data->idp_id              = $activity->idp_id;
+    $form_data->aspek               = $activity->aspek;
+    $form_data->nilai_ipp           = $activity->nilai_ipp;
+    $form_data->tuntutan_sekarang   = $activity->tuntutan_sekarang;
+    $form_data->tuntutan_berikutnya = $activity->tuntutan_berikutnya;
+    $form_data->tuntutan_lingkungan = $activity->tuntutan_lingkungan;
+    $form_data->area_pengembangan   = $activity->area_pengembangan;
+    $form_data->jenis_kegiatan      = $activity->jenis_kegiatan;
+    $form_data->nama_activity       = $activity->nama_activity;
+    $form_data->waktu_teks          = $activity->waktu_teks;
+
+    // Tampilkan angka JP lama di form jika sedang EDIT biasa. 
+    // Jika sedang DUPLIKAT (is_clone), form JP tetap dikosongkan (0).
+    if (!$is_clone) {
+        $form_data->jumlah_jp       = $activity->jumlah_jp;
+    } else {
+        $form_data->jumlah_jp       = 0;
+    }
     
-    // 4. Melekatkan ID draft ke properti 'evidence_file' agar form mengenali datanya
-    $existing_act->evidence_file = $draftitemid;
+    // Siapkan draft file hanya jika dalam mode edit biasa (bukan kloning)
+    if (!$is_clone && $idp->status == 1 && $activity->evidence_fileid) {
+        $draftitemid = file_get_submitted_draft_itemid('evidence_file');
+        file_prepare_draft_area(
+            $draftitemid, 
+            context_system::instance()->id, 
+            'local_myidpebi', 
+            'evidence', 
+            $activity->id, 
+            ['subdirs' => 0, 'maxbytes' => 2048*1024, 'maxfiles' => 1]
+        );
+        $form_data->evidence_file = $draftitemid;
+    }
     
-    $mform->set_data($existing_act);
+    $mform->set_data($form_data);
 } else {
-    $mform->set_data(['idp_id' => $idp_id]);
+    $form_data = new stdClass();
+    $form_data->idp_id = $idp_id;
+    $mform->set_data($form_data);
 }
 
 if ($mform->is_cancelled()) {
@@ -59,37 +88,49 @@ if ($mform->is_cancelled()) {
     $act = new stdClass();
     $act->idp_id = $idp_id;
     
-    // Logika Rencana
-    if (!$act_id || $idp->status == 0) {
-        $act->jenis_kegiatan = $data->jenis_kegiatan;
-        $act->nama_activity  = $data->nama_activity;
-        $act->waktu_teks     = $data->waktu_teks;
+    // Logika Rencana (Selalu tangkap data form untuk record baru/duplikat maupun edit)
+    $act->aspek               = $data->aspek;
+    $act->nilai_ipp           = $data->nilai_ipp;
+    $act->tuntutan_sekarang   = isset($data->tuntutan_sekarang) ? $data->tuntutan_sekarang : '-';
+    $act->tuntutan_berikutnya = isset($data->tuntutan_berikutnya) ? $data->tuntutan_berikutnya : '-';
+    $act->tuntutan_lingkungan = isset($data->tuntutan_lingkungan) ? $data->tuntutan_lingkungan : '-';
+    $act->area_pengembangan   = isset($data->area_pengembangan) ? $data->area_pengembangan : '-';
+    $act->jenis_kegiatan      = $data->jenis_kegiatan;
+    $act->nama_activity       = $data->nama_activity;
+    $act->waktu_teks          = $data->waktu_teks;
+
+    // Logika Realisasi JP (Hanya disimpan jika status dokumen berjalan dan bukan duplikasi baru)
+    if ($idp->status == 1 && !$is_clone) {
+        // Jika form mengirimkan angka JP, pakai angka tersebut. Jika kosong/null, gunakan fallback ke angka 0
+        $input_jp = isset($data->jumlah_jp) ? (int)$data->jumlah_jp : 0;
+        
+        // JALUR EDIT: Jika karyawan mengedit data lama dan inputan baru di form kosong, pertahankan data JP lama dari DB
+        if ($act_id && $input_jp === 0) {
+            $act->jumlah_jp = isset($activity->jumlah_jp) ? (int)$activity->jumlah_jp : 0;
+        } else {
+            $act->jumlah_jp = $input_jp;
+        }
+    } else {
+        // Jika masih berstatus Draft (0) atau sedang menduplikat baru, paksa JP ke 0
+        $act->jumlah_jp = 0;
     }
 
-    // Logika Realisasi JP
-    if ($idp->status == 1) {
-        $act->jumlah_jp = $data->jumlah_jp;
-    }
-
-    // Eksekusi CRUD Database
-    if ($act_id) {
+    // Eksekusi CRUD Database dengan dukungan Duplikasi
+    if ($act_id && !$is_clone) {
         $act->id = $act_id;
         $DB->update_record('local_myidpebi_act', $act);
         $current_id = $act_id;
     } else {
-        $act->jumlah_jp = 0;
         $act->evidence_fileid = 0;
         $act->deleted = 0;
         $current_id = $DB->insert_record('local_myidpebi_act', $act);
     }
 
-    // --- MANAJEMEN PENYIMPANAN BERKAS FISIK ---
-    if ($idp->status == 1) {
-        // Ambil data ID folder draf dari objek $data->evidence_file
+    // --- MANAJEMEN PENYIMPANAN BERKAS FISIK (Hanya saat edit biasa di status berjalan) ---
+    if ($idp->status == 1 && !$is_clone) {
         $draftitemid = isset($data->evidence_file) ? $data->evidence_file : 0;
         
         if ($draftitemid) {
-            // Pindahkan file dari area draf kembali ke storage utama 'evidence' Moodle secara permanen
             file_save_draft_area_files(
                 $draftitemid, 
                 context_system::instance()->id, 
@@ -98,8 +139,6 @@ if ($mform->is_cancelled()) {
                 $current_id, 
                 ['subdirs' => 0, 'maxbytes' => 2048*1024, 'maxfiles' => 1]
             );
-            
-            // Simpan reference ID draf ke kolom database
             $DB->set_field('local_myidpebi_act', 'evidence_fileid', $draftitemid, ['id' => $current_id]);
         }
     }

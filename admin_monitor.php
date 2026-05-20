@@ -14,7 +14,8 @@ if (!is_siteadmin() && !has_capability('moodle/site:viewreports', $context)) {
 
 // 2. Inisialisasi Parameter
 $page_num      = optional_param('page', 0, PARAM_INT);
-$per_page      = 20; 
+//Jumlah list per halaman
+$per_page      = 2; 
 $search        = optional_param('search', '', PARAM_TEXT);
 $status_filter = optional_param('status_filter', -1, PARAM_INT);
 
@@ -33,6 +34,14 @@ $PAGE->navbar->add('Monitoring Global');
 
 echo $OUTPUT->header();
 
+// =========================================================================
+// ADDED: NAVIGASI TAB MENU (Sinkron dengan yang ada di admin_dashboard.php)
+// =========================================================================
+echo '<ul class="nav nav-tabs mb-4">';
+echo '  <li class="nav-item"><a class="nav-item nav-link" href="' . new moodle_url('/local/myidpebi/admin_dashboard.php') . '"><i class="fa fa-pie-chart"></i> Ringkasan & Tren</a></li>';
+echo '  <li class="nav-item"><a class="nav-item nav-link active" href="' . new moodle_url('/local/myidpebi/admin_monitor.php') . '"><i class="fa fa-table"></i> Monitoring Data Karyawan</a></li>';
+echo '</ul>';
+
 // --- 3. FILTER UNTUK ADMIN (Menggunakan Fungsi Pusat lib.php) ---
 $st0 = local_myidpebi_get_status_info(0)->text;
 $st1 = local_myidpebi_get_status_info(1)->text;
@@ -41,7 +50,7 @@ $st2 = local_myidpebi_get_status_info(2)->text;
 echo '<div class="card mb-4 border-primary shadow-sm"><div class="card-body">';
 echo '<h6 class="card-title text-primary"><i class="fa fa-search"></i> Pencarian Global</h6>';
 echo '<form method="get" action="admin_monitor.php" class="form-inline">';
-echo '<input type="text" name="search" class="form-control mr-2" style="width:300px" placeholder="Nama Karyawan / NIK / Nama Atasan..." value="'.s($search).'">';
+echo '<input type="text" name="search" class="form-control mr-2" style="width:300px" placeholder="Nama Karyawan / NIK / Nama Pembimbing..." value="'.s($search).'">';
 echo '<select name="status_filter" class="form-control mr-2">
         <option value="-1">-- Semua Status --</option>
         <option value="0" '.($status_filter === 0 ? 'selected' : '').'>'.$st0.'</option>
@@ -96,7 +105,7 @@ if ($records) {
             <th>NIK</th>
             <th>Karyawan</th>
             <th>Nama Program</th>
-            <th>Atasan / Coach</th>
+            <th>Pembimbing</th>
             <th>Status</th>
             <th>Total JP</th>
             <th>Aksi</th>
@@ -135,5 +144,4 @@ if ($records) {
     echo $OUTPUT->notification('Tidak ditemukan data IDP di seluruh sistem.', 'info');
 }
 
-echo '<div class="mt-3"><a href="index.php" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Kembali ke Dashboard</a></div>';
 echo $OUTPUT->footer();

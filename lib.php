@@ -20,15 +20,15 @@ function local_myidpebi_get_status_info($statuscode) {
 
     switch ($statuscode) {
         case 0:
-            $status->text = 'Menunggu Approval';
+            $status->text = 'Menunggu Approval'; // Menunggu Approval Pembimbing/Atasan
             $status->class = 'badge-secondary'; // Abu-abu
             break;
         case 1:
-            $status->text = 'Disetujui / Proses';
+            $status->text = 'Disetujui / Proses'; //Disetujui Oleh Pembimbing/Atasan
             $status->class = 'badge-warning'; // Kuning
             break;
         case 2:
-            $status->text = 'Selesai Diverifikasi';
+            $status->text = 'Selesai Diverifikasi'; //Diverivikasi Oleh Pembimbing/Atasan
             $status->class = 'badge-success'; // Hijau
             break;
         default:

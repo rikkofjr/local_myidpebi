@@ -23,6 +23,13 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="idp_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="aspek" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="nilai_ipp" TYPE="char" LENGTH="255" DEFAULT="0" NOTNULL="true"/>
+                <FIELD NAME="tuntutan_sekarang" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang"/>
+                <FIELD NAME="tuntutan_berikutnya" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya"/>
+                <FIELD NAME="tuntutan_lingkungan" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan"/>
+                <FIELD NAME="area_pengembangan" TYPE="text"  NOTNULL="false"  COMMENT="Area Pengembangan"/>
+
                 <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="50" NOTNULL="true"/>
                 <FIELD NAME="nama_activity" TYPE="char" LENGTH="255" NOTNULL="true"/>
                 <FIELD NAME="jumlah_jp" TYPE="int" LENGTH="10" NOTNULL="true"/>

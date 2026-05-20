@@ -82,6 +82,85 @@ if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lang
 
 echo $OUTPUT->header();
 
+
+// =========================================================================
+// ADDED: UI PROGRESS TRACKER ALUR STATUS IDP (TEKS SINKRON DENGAN LIB.PHP)
+// =========================================================================
+$tracker_width = ($idp->status == 0) ? '0%' : (($idp->status == 1) ? '50%' : '100%');
+$bg_step1 = ($idp->status >= 0) ? '#28a745' : '#ffffff';
+$color_step1 = ($idp->status >= 0) ? '#ffffff' : '#6c757d';
+$icon_step1 = ($idp->status > 0) ? 'fa-check' : 'fa-pencil-square-out';
+$class_step1 = ($idp->status == 0) ? 'text-primary' : 'text-success';
+
+$bg_step2 = ($idp->status >= 1) ? '#28a745' : '#ffffff';
+$color_step2 = ($idp->status >= 1) ? '#ffffff' : '#6c757d';
+$border_step2 = ($idp->status == 1) ? '#ffc107 !important' : '#dee2e6';
+$icon_step2 = ($idp->status > 1) ? 'fa-check' : 'fa-play-circle';
+$class_step2 = ($idp->status == 1) ? 'text-primary font-weight-bold' : (($idp->status > 1) ? 'text-success' : 'text-muted');
+
+$bg_step3 = ($idp->status == 2) ? '#28a745' : '#ffffff';
+$color_step3 = ($idp->status == 2) ? '#ffffff' : '#6c757d';
+$border_step3 = ($idp->status == 2) ? '#28a745 !important' : '#dee2e6';
+$class_step3 = ($idp->status == 2) ? 'text-success' : 'text-muted';
+
+echo '<div class="card mb-3 shadow-sm border-0">';
+echo '    <div class="card-body bg-light rounded p-4">';
+echo '        <h6 class="text-secondary font-weight-bold mb-3">';
+echo '            <i class="fa fa-map-signs"></i> Alur Tahapan Dokumen IDP Anda:';
+echo '        </h6>';
+echo '        <div class="d-flex justify-content-between align-items-center position-relative flex-column flex-md-row">';
+echo '            <div class="position-absolute d-none d-md-block" style="top: 25px; left: 10%; right: 10%; height: 4px; background-color: #e9ecef; z-index: 1;">';
+echo '                <div style="width: '.$tracker_width.'; height: 100%; background-color: #28a745; transition: width 0.5s ease;"></div>';
+echo '            </div>';
+echo '            <div class="text-center position-relative mb-3 mb-md-0" style="z-index: 2; flex: 1;">';
+echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step1.'; color: '.$color_step1.';">';
+echo '                    <i class="fa '.$icon_step1.' fa-lg"></i>';
+echo '                </div>';
+echo '                <h6 class="mt-2 mb-1 font-weight-bold '.$class_step1.'">1. Perencanaan</h6>';
+echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
+if ($idp->status == 0) {
+    echo '                    <span class="text-warning font-weight-bold">Buatlah aktivitas perencanaan :</span><br>Jika sudah Ok, minta persetujuan dari Pembimbing.';
+} else {
+    echo '                    Rencana IDP anda telah disetujui.';
+}
+echo '                </small>';
+echo '            </div>';
+echo '            <div class="text-center position-relative mb-3 mb-md-0" style="z-index: 2; flex: 1;">';
+echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step2.'; color: '.$color_step2.'; border-color: '.$border_step2.';">';
+echo '                    <i class="fa '.$icon_step2.' fa-lg"></i>';
+echo '                </div>';
+echo '                <h6 class="mt-2 mb-1 font-weight-bold '.$class_step2.'">2. Realisasi & JP</h6>';
+echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
+if ($idp->status == 0) {
+    echo '                    Kunci pasif. Terbuka otomatis setelah rencana disetujui Atasan.';
+} else if ($idp->status == 1) {
+    echo '                    <span class="text-warning font-weight-bold">Langkah Anda Sekarang:</span>
+                                <br>Silakan laksanakan aktivitas, isi input Jam Pelajaran (JP), dan upload evidence dari aktivitas tersebut.';
+} else {
+    echo '                    Realisasi JP & Evidence sudah di verifikasi atasan.';
+}
+echo '                </small>';
+echo '            </div>';
+echo '            <div class="text-center position-relative" style="z-index: 2; flex: 1;">';
+echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step3.'; color: '.$color_step3.'; border-color: '.$border_step3.';">';
+echo '                    <i class="fa fa-trophy fa-lg"></i>';
+echo '                </div>';
+echo '                <h6 class="mt-2 mb-1 font-weight-bold '.$class_step3.'">3. Validasi Tuntas</h6>';
+echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
+if ($idp->status < 1) {
+    echo '                    Kunci pasif.';
+} else if ($idp->status == 1) {
+    echo '                    <span class="text-info font-weight-bold">Tahap Berikutnya:</span><br>Setelah semua aktivitas direalisasikan. Pembimbing akan melakukan verifikasi';
+} else {
+    echo '                    <span class="text-success font-weight-bold"><i class="fa fa-lock"></i> Selesai:</span><br>Seluruh program pengembangan IDP selesai & terkunci.';
+}
+echo '                </small>';
+echo '            </div>';
+echo '        </div>';
+echo '    </div>';
+echo '</div>';
+
+
 // --- TAMPILAN DETAIL INFORMASI IDP (100% Sesuai UI/UX Anda) ---
 echo '<div class="card mb-4 border-left-primary shadow-sm"><div class="card-body">';
 $status_info = local_myidpebi_get_status_info($idp->status);
@@ -102,16 +181,22 @@ if ($idp->status < 2) {
 }
 echo '      </div>';
 
+//wait
 // Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
 if ($idp->status > 0) {
     echo '<div class="mt-3 p-2 bg-light border rounded small">';
     echo '  <h6 class="text-secondary font-weight-bold mb-1"><i class="fa fa-history"></i> Riwayat Persetujuan Sistem:</h6>';
+    
     if (!empty($idp->approved_by)) {
-        echo "  <div class='text-muted'>• Disetujui oleh: <strong>{$idp->app_nik} - {$idp->app_fname} {$idp->app_lname}</strong></div>";
+        $status1_info = local_myidpebi_get_status_info(1);
+        echo "  <div class='text-muted'>• Status [<strong>{$status1_info->text}</strong>] oleh: <strong>{$idp->app_nik} - {$idp->app_fname} {$idp->app_lname}</strong></div>";
     }
+    
     if (!empty($idp->verified_by)) {
-        echo "  <div class='text-muted'>• Diverifikasi oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
+        $status2_info = local_myidpebi_get_status_info(2);
+        echo "  <div class='text-muted'>• Status [<strong>{$status2_info->text}</strong>] oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
     }
+    
     echo '</div>';
 }
 
@@ -157,6 +242,12 @@ echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
 echo '  <thead class="thead-light text-center">
             <tr>
+                <th>Aspek</th>
+                <th>Nilai</th>
+                <th>Tuntutan Pada Posisi <br/> Sekarang</th>
+                <th>Tuntutan Pada Posisi <br/> Berikutnya</th>
+                <th>Tuntutan Karena <br/> Lingkungan</th>
+                <th>Area Pengembangan yang perlu dikembangkan</th>
                 <th>Jenis</th>
                 <th>Aktivitas</th>
                 <th>JP</th>
@@ -185,6 +276,25 @@ if ($activities) {
         }
 
         echo "<tr class='{$row_class}'>";
+        echo "  <td {$text_style}>{$a->aspek}</td>";
+        echo "  <td {$text_style}>{$a->nilai_ipp}</td>";
+
+        // =========================================================================
+        // KONDISIONAL KOTAK TEKS PANJANG (DIKUNCI DENGAN SCROLLBOX INTERNAL AGAR TIDAK MELAR)
+        // =========================================================================
+        $textarea_box_style = 'style="max-height: 95px; overflow-y: auto; font-size: 15px; line-height: 1.4; padding: 6px; background: rgba(0,0,0,0.03); border-radius: 4px; border: 1px solid #e9ecef; white-space: pre-wrap; min-width: 150px;"';
+
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->area_pengembangan) . "</div></td>";
+
+        // echo "  <td {$text_style}>{$a->tuntutan_sekarang}</td>";
+        // echo "  <td {$text_style}>{$a->tuntutan_berikutnya}</td>";
+        // echo "  <td {$text_style}>{$a->tuntutan_lingkungan}</td>";
+        // echo "  <td {$text_style}>{$a->area_pengembangan}</td>";
+
+
         echo "  <td {$text_style} class='text-center'>{$a->jenis_kegiatan}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp}</td>";
@@ -195,8 +305,12 @@ if ($activities) {
         if ($idp->status < 2 && $USER->id == $idp->userid && !$is_deleted) {
             $edit_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id, 'act_id' => $a->id]);
             $del_url = new moodle_url($url, ['delete_act' => $a->id, 'sesskey' => sesskey()]);
+            $clone_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id, 'act_id' => $a->id, 'is_clone' => 1]);
+
             echo "<a href='{$edit_url}' class='btn btn-sm btn-warning mr-1'><i class='fa fa-edit'></i></a>";
             echo "<a href='{$del_url}' class='btn btn-sm btn-danger' onclick='return confirm(\"Batalkan aktivitas ini?\")'><i class='fa fa-trash'></i></a>";
+            echo "<a href='{$clone_url}' class='btn btn-sm btn-info mr-1' title='Duplikat' onclick='return confirm(\"Apakah Anda yakin ingin menduplikat/mengkloning aktivitas ini?\")'><i class='fa fa-clone'></i></a>";
+
         } else if ($is_deleted) {
             echo '<span class="badge badge-secondary">Dibatalkan</span>';
         } else {
@@ -206,7 +320,7 @@ if ($activities) {
         echo "</tr>";
     }
 } else {
-    echo '<tr><td colspan="6" class="text-center text-muted p-4">Belum ada rincian aktivitas.</td></tr>';
+    echo '<tr><td colspan="12" class="text-center text-muted p-4">Belum ada rincian aktivitas.</td></tr>';
 }
 
 echo '  </tbody></table></div>';
