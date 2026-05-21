@@ -108,6 +108,7 @@ if ($records) {
             <th>Pembimbing</th>
             <th>Status</th>
             <th>Total JP</th>
+            <th>Efektivitas</th>
             <th>Aksi</th>
           </tr></thead><tbody>';
 
@@ -130,7 +131,7 @@ if ($records) {
         
         // Total JP hanya muncul angka jika status 2 (Verified)
         echo "<td><strong>" . ($idp->status == 2 ? ($idp->total_jp ?: 0) : '-') . "</strong></td>";
-        
+        echo "<td>{$idp->skor_efektivitas}</td>";
         echo "<td>
             <a href='{$view_url}' class='btn btn-sm btn-info'><i class='fa fa-eye'></i> </a>
             <a href='{$edit_url}' class='btn btn-sm btn-warning'><i class='fa fa-pencil'></i> </a>

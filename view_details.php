@@ -135,7 +135,7 @@ if ($idp->status == 0) {
     echo '                    Kunci pasif. Terbuka otomatis setelah rencana disetujui Atasan.';
 } else if ($idp->status == 1) {
     echo '                    <span class="text-warning font-weight-bold">Langkah Anda Sekarang:</span>
-                                <br>Silakan laksanakan aktivitas, isi input Jam Pelajaran (JP), dan upload evidence dari aktivitas tersebut.';
+                                <br>Laksanakan aktivitas, isi input Jam Pelajaran (JP), dan upload evidence dari aktivitas tersebut. <br/>Jika sudah terisi lakukan self assement ';
 } else {
     echo '                    Realisasi JP & Evidence sudah di verifikasi atasan.';
 }
@@ -181,6 +181,37 @@ if ($idp->status < 2) {
 }
 echo '      </div>';
 
+
+
+// =========================================================================
+// 🟢 LOGIKA TAMPILAN EVALUASI MANDIRI (SELF-ASSESSMENT)
+// =========================================================================
+$is_owner = ($USER->id == $idp->userid);
+
+if ((float)$idp->skor_efektivitas > 0) {
+    // 1. Jika kuesioner SUDAH DIISI, tampilkan card hasil skornya
+    echo '<div class="card mb-4 border-success">';
+    echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Evaluasi Mandiri (Self-Assessment)</strong></div>';
+    echo '  <div class="card-body">';
+    echo '      <h4 class="card-title text-success">Skor Efektivitas IDP: ' . number_format($idp->skor_efektivitas, 2) . '%</h4>';
+    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
+    echo '  </div>';
+    echo '</div>';
+} else if ($idp->status == 1 && $is_owner) {
+    // 2. Jika BELUM DIISI, status sedang Running (1), dan dia pemiliknya, tampilkan Tombol Pemicu
+    $assessment_url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
+    echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';
+    echo '  <div>';
+    echo '      <h5><i class="fa fa-exclamation-triangle"></i> Evaluasi Efektivitas IDP</h5>';
+    echo '      <p class="mb-0">Jika anda telah mengisi semua rincian aktifitas, Silakan isi kuesioner evaluasi mandiri untuk mengukur ketercapaian target pengembangan Anda periode ini.</p>';
+    echo '  </div>';
+    echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white">';
+    echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';
+    echo '  </a>';
+    echo '</div>';
+}
+// =========================================================================
+
 //wait
 // Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
 if ($idp->status > 0) {
@@ -201,6 +232,7 @@ if ($idp->status > 0) {
 }
 
 echo '</div>';
+
 
 // Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
 if ($is_pembimbing || $is_atasan_langsung) {

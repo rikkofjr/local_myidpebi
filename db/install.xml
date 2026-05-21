@@ -13,6 +13,9 @@
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="approved_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang menyetujui program"/>
                 <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
+
+                <FIELD NAME="skor_efektivitas" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="false" DEFAULT="0.00" COMMENT="Hasil persentase self-assessment efektivitas IDP"/>
+                <FIELD NAME="kesimpulan_karyawan" TYPE="text" NOTNULL="false" COMMENT="Catatan evaluasi mandiri oleh karyawan"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
