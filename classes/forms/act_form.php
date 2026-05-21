@@ -60,8 +60,9 @@ class act_form extends \moodleform {
         // ==========================================
         $mform->addElement('header', 'group_form_2', 'Group Form 2: Realisasi Pengembangan (Diisi Setelah Berjalan)');
         
-        $mform->addElement('text', 'jumlah_jp', 'Jam Pelajaran (JP)');
+        $mform->addElement('text', 'jumlah_jp', 'Jam Pelajaran (JP)', ['placeholder' => 'Masukkan angka JP...']);
         $mform->setType('jumlah_jp', PARAM_INT);
+        $mform->addHelpButton('jumlah_jp', 'help_jp', 'local_myidpebi'); // Opsional jika ingin ada tombol tanya info
         
         $mform->addElement('filepicker', 'evidence_file', 'Evidence Pengembangan', null, ['maxbytes'=>2048*1024, 'accepted_types'=>['.pdf','.jpg','.png']]);
 
@@ -87,5 +88,49 @@ class act_form extends \moodleform {
         }
 
         $this->add_action_buttons(true, 'Simpan');
+    }
+
+    /**
+     * 🟢 VALIDASI KUSTOM: Standar Batas Minimal & Maksimal JP Per Jenis Kegiatan
+     */
+    public function validation($data, $files) {
+        $errors = parent::validation($data, $files);
+
+        // 1. Matriks aturan standar batas JP perusahaan (Bisa Anda ubah angkanya sesuai kebijakan)
+        $jp_rules = [
+            'Coaching'        => ['min' => 1,  'max' => 3,   'label' => 'Coaching'],
+            'Magang'          => ['min' => 10, 'max' => 40,  'label' => 'Magang'],
+            'Seminar'         => ['min' => 2,  'max' => 8,   'label' => 'Seminar'],
+            'Workshop'        => ['min' => 2,  'max' => 16,  'label' => 'Workshop'],
+            'Sertifikasi'     => ['min' => 8,  'max' => 50,  'label' => 'Sertifikasi'],
+            'Training'        => ['min' => 4,  'max' => 40,  'label' => 'Training'],
+            'Assignment'      => ['min' => 5,  'max' => 30,  'label' => 'Assignment'],
+            'Belajar Mandiri' => ['min' => 1,  'max' => 10,  'label' => 'Belajar Mandiri'],
+        ];
+
+        // 2. Lakukan validasi hanya jika kolom JP sedang terbuka dan diisi oleh karyawan
+        if (isset($data['jumlah_jp']) && $data['jumlah_jp'] !== '') {
+            $jenis = isset($data['jenis_kegiatan']) ? $data['jenis_kegiatan'] : '';
+            $jp_input = (int)$data['jumlah_jp'];
+
+            // Jika jenis kegiatan yang dipilih karyawan ada di dalam daftar aturan
+            if (array_key_exists($jenis, $jp_rules)) {
+                $min   = $jp_rules[$jenis]['min'];
+                $max   = $jp_rules[$jenis]['max'];
+                $label = $jp_rules[$jenis]['label'];
+
+                // Cek Batas Minimum
+                if ($jp_input < $min) {
+                    $errors['jumlah_jp'] = "Batas minimal input untuk kegiatan {$label} adalah {$min} JP.";
+                }
+                
+                // Cek Batas Maksimum
+                if ($jp_input > $max) {
+                    $errors['jumlah_jp'] = "Batas maksimal input untuk kegiatan {$label} adalah {$max} JP (Input Anda: {$jp_input} JP).";
+                }
+            }
+        }
+
+        return $errors;
     }
 }
