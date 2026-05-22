@@ -267,6 +267,8 @@ if ($idp->status < 2 && $USER->id == $idp->userid) {
     echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
 }
 echo '</div>';
+echo '<p class="text-muted"><small>* Klik tombol pencil untuk melakukan perubahan aktifitas</small></p>';
+
 
 $activities = $DB->get_records('local_myidpebi_act', ['idp_id' => $idp_id], 'deleted ASC, id ASC');
 
@@ -339,8 +341,8 @@ if ($activities) {
             $del_url = new moodle_url($url, ['delete_act' => $a->id, 'sesskey' => sesskey()]);
             $clone_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id, 'act_id' => $a->id, 'is_clone' => 1]);
 
-            echo "<a href='{$edit_url}' class='btn btn-sm btn-warning mr-1'><i class='fa fa-edit'></i></a>";
-            echo "<a href='{$del_url}' class='btn btn-sm btn-danger' onclick='return confirm(\"Batalkan aktivitas ini?\")'><i class='fa fa-trash'></i></a>";
+            echo "<a href='{$edit_url}' class='btn btn-sm btn-warning mr-1' title='Edit'><i class='fa fa-edit'></i></a>";
+            echo "<a href='{$del_url}' class='btn btn-sm btn-danger' title='Delete/Batal' onclick='return confirm(\"Batalkan aktivitas ini?\")'><i class='fa fa-trash'></i></a>";
             echo "<a href='{$clone_url}' class='btn btn-sm btn-info mr-1' title='Duplikat' onclick='return confirm(\"Apakah Anda yakin ingin menduplikat/mengkloning aktivitas ini?\")'><i class='fa fa-clone'></i></a>";
 
         } else if ($is_deleted) {

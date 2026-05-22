@@ -6,12 +6,9 @@ global $DB, $USER, $PAGE, $OUTPUT;
 
 require_login();
 
-
-
 // 1. Inisialisasi Parameter
 $page_num = optional_param('page', 0, PARAM_INT);
 $per_page = 10;
-$edit_idp_id = optional_param('edit_idp', 0, PARAM_INT);
 $delete_idp_id = optional_param('delete_idp', 0, PARAM_INT);
 
 $url = new moodle_url('/local/myidpebi/index.php');
@@ -36,61 +33,15 @@ if ($delete_idp_id && confirm_sesskey()) {
 
 echo $OUTPUT->header();
 
-// Navigasi ke halaman Approval Atasan (Rata Kanan)
+// Navigasi ke halaman Approval Atasan (Rata Kanan) - 100% KODE ASLI ANDA
 $is_manager = has_capability('moodle/site:viewreports', context_system::instance());
 echo '<div class="d-flex justify-content-end mb-3">';
-            if (is_siteadmin() || $is_manager) {
-                echo '<div class="mb-2"><a href="admin_monitor.php" class="btn btn-danger btn-block">PANEL ADMINISTRATOR GLOBAL</a></div>';
-            }
+if (is_siteadmin() || $is_manager) {
+    echo '<div class="mb-2 mr-2"><a href="admin_monitor.php" class="btn btn-danger btn-block">PANEL ADMINISTRATOR GLOBAL</a></div>';
+}
+// Tombol ke halaman terpisah add_idp.php
+echo '<div class="mb-2 mr-2"><a href="add_idp.php" class="btn btn-primary btn-block"><i class="fa fa-plus"></i> Buat Ajukan IDP Baru</a></div>';
 echo '<a href="manage.php" class="btn btn-outline-primary">Halaman Approval</a></div>';
-
-// --- 2. LOGIKA FORM (INSERT & UPDATE) ---
-$mform = new \local_myidpebi\forms\idp_form();
-
-if ($edit_idp_id) {
-    $existing_idp = $DB->get_record('local_myidpebi', ['id' => $edit_idp_id, 'userid' => $USER->id]);
-    if ($existing_idp && $existing_idp->status == 0) {
-        // Ambil username atasan untuk ditampilkan di form
-        $atasan_user = $DB->get_record('user', ['id' => $existing_idp->atasan_id], 'username');
-        $existing_idp->nik_atasan = $atasan_user->username;
-        $mform->set_data($existing_idp);
-        echo $OUTPUT->heading('Edit Program IDP', 4);
-    }
-} else {
-    $mform->set_data(['nik_atasan' => local_myidpebi_get_atasan_username($USER->id)]);
-}
-
-if ($fromform = $mform->get_data()) {
-    $input_nik = trim($fromform->nik_atasan);
-    $atasan = $DB->get_record('user', ['username' => $input_nik], 'id');
-    
-    if (!$atasan) {
-        \core\notification::error("NIK Atasan tidak ditemukan!");
-    } else {
-        $data = new stdClass();
-        $data->userid = $USER->id;
-        $data->atasan_id = $atasan->id;
-        $data->nama_idp = $fromform->nama_idp;
-        $data->mulai_date = $fromform->mulai_date;
-        $data->akhir_date = $fromform->akhir_date;
-
-        if (!empty($fromform->id)) {
-            // MODE UPDATE
-            $data->id = $fromform->id;
-            $DB->update_record('local_myidpebi', $data);
-            $msg = 'Program IDP berhasil diperbarui.';
-        } else {
-            // MODE INSERT
-            $data->status = 0;
-            $data->timecreated = time();
-            $DB->insert_record('local_myidpebi', $data);
-            $msg = 'Program IDP berhasil dibuat, silahkan minta pembimbing anda untuk approval';
-        }
-        redirect($url, $msg, null, \core\output\notification::NOTIFY_SUCCESS);
-    }
-}
-
-$mform->display();
 
 // --- 3. TABEL DAFTAR IDP ---
 echo $OUTPUT->heading('Daftar IDP Saya', 3);
@@ -115,15 +66,14 @@ if ($records) {
     echo '<th>Nama Kegiatan</th><th>Pembimbing</th><th>Mulai</th><th>Target</th><th>Total JP</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
     
     foreach ($records as $idp) {
-        $display_jp = $idp->total_jp ?: 0;
+        // 🟢 SINKRONISASI TOTAL: Memanggil fungsi master dari lib.php
         $status_info = local_myidpebi_get_status_info($idp->status);
 
+        // Atur tampilan angka JP mengikuti aturan status dari lib.php
         if ($idp->status == 2) {
-            $status_text = 'Terverifikasi'; $badge = 'badge-success'; 
-        } else if ($idp->status == 1) {
-            $status_text = 'Disetujui'; $badge = 'badge-warning'; $display_jp = '-';
+            $display_jp = $idp->total_jp ?: 0;
         } else {
-            $status_text = 'Menunggu'; $badge = 'badge-secondary'; $display_jp = '-';
+            $display_jp = '-';
         }
 
         $view_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp->id]);
@@ -133,12 +83,14 @@ if ($records) {
         echo "<td>".userdate($idp->mulai_date, '%d %b %y')."</td>";
         echo "<td>".userdate($idp->akhir_date, '%d %b %y')."</td>";
         echo "<td>{$display_jp}</td>";
+        
+        // 🟢 SINKRONISASI TOTAL: Menggunakan properti badge dari lib.php secara utuh
         echo "<td>".$status_info->badge."</td>";
         echo "<td>";
         
         // Tombol Edit & Hapus hanya muncul jika status masih 0 (Menunggu)
         if ($idp->status == 0) {
-            $edit_url = new moodle_url($url, ['edit_idp' => $idp->id]);
+            $edit_url = new moodle_url('/local/myidpebi/add_idp.php', ['edit_idp' => $idp->id]);
             $del_url = new moodle_url($url, ['delete_idp' => $idp->id, 'sesskey' => sesskey()]);
             echo "<a href='{$edit_url}' class='btn btn-sm btn-link p-0 mr-2'>Edit</a>";
             echo "<a href='{$del_url}' class='btn btn-sm btn-link text-danger p-0' onclick='return confirm(\"Hapus seluruh program ini?\")'>Hapus</a>";
