@@ -191,7 +191,7 @@ $is_owner = ($USER->id == $idp->userid);
 if ((float)$idp->skor_efektivitas > 0) {
     // 1. Jika kuesioner SUDAH DIISI, tampilkan card hasil skornya
     echo '<div class="card mb-4 border-success">';
-    echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Evaluasi Mandiri (Self-Assessment)</strong></div>';
+    echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Self-Assessment</strong></div>';
     echo '  <div class="card-body">';
     echo '      <h4 class="card-title text-success">Skor Efektivitas IDP: ' . number_format($idp->skor_efektivitas, 2) . '%</h4>';
     echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
@@ -202,8 +202,8 @@ if ((float)$idp->skor_efektivitas > 0) {
     $assessment_url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
     echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';
     echo '  <div>';
-    echo '      <h5><i class="fa fa-exclamation-triangle"></i> Evaluasi Efektivitas IDP</h5>';
-    echo '      <p class="mb-0">Jika anda telah mengisi semua rincian aktifitas, Silakan isi kuesioner evaluasi mandiri untuk mengukur ketercapaian target pengembangan Anda periode ini.</p>';
+    echo '      <h5><i class="fa fa-exclamation-triangle"></i> Self Assement IDP</h5>';
+    echo '      <p class="mb-0">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
     echo '  </div>';
     echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white">';
     echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';

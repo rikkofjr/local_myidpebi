@@ -98,14 +98,27 @@ class act_form extends \moodleform {
 
         // 1. Matriks aturan standar batas JP perusahaan (Bisa Anda ubah angkanya sesuai kebijakan)
         $jp_rules = [
-            'Coaching'        => ['min' => 1,  'max' => 3,   'label' => 'Coaching'],
-            'Magang'          => ['min' => 10, 'max' => 40,  'label' => 'Magang'],
-            'Seminar'         => ['min' => 2,  'max' => 8,   'label' => 'Seminar'],
-            'Workshop'        => ['min' => 2,  'max' => 16,  'label' => 'Workshop'],
-            'Sertifikasi'     => ['min' => 8,  'max' => 50,  'label' => 'Sertifikasi'],
-            'Training'        => ['min' => 4,  'max' => 40,  'label' => 'Training'],
-            'Assignment'      => ['min' => 5,  'max' => 30,  'label' => 'Assignment'],
-            'Belajar Mandiri' => ['min' => 1,  'max' => 10,  'label' => 'Belajar Mandiri'],
+            'Pendidikan Tinggi'         => ['min' => 1, 'max' => 20,   'label' => 'Pendidikan Tinggi'],
+            'Pelatihan Internal'        => ['min' => 1, 'max' => 20,   'label' => 'Pelatihan Internal'],
+            'Seminar'                   => ['min' => 1, 'max' => 4,   'label' => 'Seminar'],
+            'Workshop'                  => ['min' => 1, 'max' => 5,  'label' => 'Workshop'],
+            'Bimbingan Teknis'          => ['min' => 1, 'max' => 20,  'label' => 'Bimbingan Teknis'],
+            'Pertukaran Karyawan'       => ['min' => 1, 'max' => 20,  'label' => 'Pertukaran Karyawan'],
+            'Magang'                    => ['min' => 1, 'max' => 20,  'label' => 'Magang'],
+            'Benchmarking'              => ['min' => 1, 'max' => 10,  'label' => 'Benchmarking'],
+            'Pelatihan Jarak Jauh'      => ['min' => 1, 'max' => 20,  'label' => 'Pelatihan Jarak Jauh'],
+            'Coaching'                  => ['min' => 1, 'max' => 2,   'label' => 'Coaching'],
+            'Mentoring'                 => ['min' => 1, 'max' => 2,   'label' => 'Mentoring'],
+            'Secondments'               => ['min' => 1, 'max' => 20,   'label' => 'Secondments'],
+            'Melakukan sharing session' => ['min' => 1, 'max' => 2,   'label' => 'Melakukan sharing session'],
+            'Komunitas Belajar'         => ['min' => 1, 'max' => 2,   'label' => 'Komunitas Belajar'],
+            'Mengikuti sharing session dari asosiasi'=> ['min' => 4, 'max' => 4,   'label' => 'Mengikuti sharing session dari asosiasi'],
+            'Menjadi Narasumber dalam asosiasi'=> ['min' => 5, 'max' => 5,   'label' => 'Menjadi Narasumber dalam asosiasi'],
+            'Outbond'                   => ['min' => 1, 'max' => 20,   'label' => 'Outbond'],
+            'Daily Practice'            => ['min' => null, 'max' => 1,   'label' => 'Daily Practice'],
+            'Belajar Mandiri'           => ['min' => 1, 'max' => 2,   'label' => 'Belajar Mandiri'],
+            'Mereview buku/artikel'           => ['min' => 1, 'max' => 4,   'label' => 'Mereview buku/artikel'],
+            'Keterlibatan Project'           => ['min' => 1, 'max' => 10,   'label' => 'Keterlibatan Project'],
         ];
 
         // 2. Lakukan validasi hanya jika kolom JP sedang terbuka dan diisi oleh karyawan
