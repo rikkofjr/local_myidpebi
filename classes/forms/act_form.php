@@ -38,14 +38,27 @@ class act_form extends \moodleform {
         $mform->setType('area_pengembangan', PARAM_RAW);
 
         $options = [
-            'Workshop'=>'Workshop',
-            'Magang'=>'Magang',
-            'Coaching'=>'Coaching',
-            'Seminar'=>'Seminar',
-            'Sertifikasi'=>'Sertifikasi',
-            'Training'=>'Training',
-            'Assignment'=>'Assignment',
-            'Belajar Mandiri'=>'Belajar Mandiri'
+            'Pendidikan Tinggi' => 'Pendidikan Tinggi',
+            'Pelatihan Internal' => 'Pelatihan Internal',
+            'Seminar' => 'Seminar',
+            'Workshop' => 'Workshop',
+            'Bimbingan Teknis' => 'Bimbingan Teknis',
+            'Pertukaran Karyawan' => 'Pertukaran Karyawan',
+            'Magang' => 'Magang',
+            'Benchmarking' => 'Benchmarking',
+            'Pelatihan Jarak Jauh' => 'Pelatihan Jarak Jauh',
+            'Coaching' => 'Coaching',
+            'Mentoring' => 'Mentoring',
+            'Secondments' => 'Secondments',
+            'Melakukan sharing session' => 'Melakukan sharing session',
+            'Komunitas Belajar' => 'Komunitas Belajar',
+            'Mengikuti sharing session dari asosiasi' => 'Mengikuti sharing session dari asosiasi',
+            'Menjadi Narasumber dalam asosiasi' => 'Menjadi Narasumber dalam asosiasi',
+            'Outbond' => 'Outbond',
+            'Daily Practice' => 'Daily Practice',
+            'Belajar Mandiri' => 'Belajar Mandiri',
+            'Mereview buku/artikel' => 'Mereview buku/artikel',
+            'Keterlibatan Project' => 'Keterlibatan Project'
         ];
         $mform->addElement('select', 'jenis_kegiatan', 'Aktivitas pengembangan yang akan dilakukan', $options);
         
