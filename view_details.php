@@ -197,7 +197,7 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
     echo '  </div>';
     echo '</div>';
-} else if ($idp->status == 1 && $is_owner) {
+} else if ($idp->status >= 1 && $is_owner) {
     // 2. Jika BELUM DIISI, status sedang Running (1), dan dia pemiliknya, tampilkan Tombol Pemicu
     $assessment_url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
     echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';

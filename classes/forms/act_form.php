@@ -110,6 +110,7 @@ class act_form extends \moodleform {
         $errors = parent::validation($data, $files);
 
         // 1. Matriks aturan standar batas JP perusahaan (Bisa Anda ubah angkanya sesuai kebijakan)
+        //
         $jp_rules = [
             'Pendidikan Tinggi'         => ['min' => 0, 'max' => 20,   'label' => 'Pendidikan Tinggi'],
             'Pelatihan Internal'        => ['min' => 0, 'max' => 20,   'label' => 'Pelatihan Internal'],
