@@ -24,64 +24,78 @@ $PAGE->set_title($page_title);
 $PAGE->set_heading($page_title);
 
 // 3. Inisialisasi Form Moodle idp_form
-$mform = new \local_myidpebi\forms\idp_form(null, ['edit_idp' => $edit_idp_id]);
+$mform = new \local_myidpebi\forms\idp_form();
 
 // Jika dalam mode EDIT, proteksi hak akses dan tuangkan data lama ke dalam form
 if ($edit_idp_id) {
-    $current_idp = $DB->get_record('local_myidpebi', ['id' => $edit_idp_id]);
+    $current_idp = $DB->get_record('local_myidpebi', ['id' => $edit_idp_id, 'userid' => $USER->id]);
     
     if (!$current_idp) {
         throw new moodle_exception('invalidrecord', 'debug', '', 'Data IDP tidak ditemukan.');
     }
     
-    // Keamanan: Pastikan yang mengedit adalah benar-benar pemilik IDP tersebut
-    if ($current_idp->userid != $USER->id) {
-        throw new moodle_exception('nopermission', 'debug', '', 'Anda tidak memiliki hak akses untuk mengubah IDP ini.');
-    }
-    
-    // Pastikan data lama hanya bisa diedit jika statusnya masih Draft (0)
     if ($current_idp->status != 0) {
-        throw new moodle_exception('nomodify', 'debug', '', 'IDP yang sudah berjalan atau selesai tidak dapat diubah lagi.');
+        throw new moodle_exception('nomodify', 'debug', '', 'IDP yang sudah berjalan tidak dapat diubah.');
     }
 
-    // Ambil NIK atasan berdasarkan ID untuk ditampilkan di form autocomplete asli Anda
-    $current_idp->nik_atasan = $DB->get_field('user', 'username', ['id' => $current_idp->atasan_id]);
+    // Konversi 'atasan_id' di database menjadi 'nik_atasan' agar dikenali oleh form autocomplete
+    $atasan_username = $DB->get_field('user', 'username', ['id' => $current_idp->atasan_id]);
+    if ($atasan_username) {
+        $current_idp->nik_atasan = $atasan_username;
+    }
+
     $mform->set_data($current_idp);
+    
+} else {
+    // 🟢 MODE SELEKSI OTOMATIS SAAT BUAT BARU
+    // Ambil string NIK Atasan langsung melalui fungsi di lib.php
+    $atasan_nik = local_myidpebi_get_atasan_username($USER->id);
+    
+    if (!empty($atasan_nik)) {
+        // Set key 'nik_atasan' sesuai dengan nama elemen autocomplete di idp_form.php
+        $mform->set_data([
+            'nik_atasan' => trim($atasan_nik)
+        ]);
+    }
 }
 
 // 4. PROSES EKSEKUSI PENYIMPANAN DATA FORM
 if ($mform->is_cancelled()) {
-    // Jika batal, kembalikan ke halaman list utama (index.php)
     redirect(new moodle_url('/local/myidpebi/index.php'));
 } else if ($fromform = $mform->get_data()) {
+    
     $idp = new stdClass();
     $idp->nama_idp   = $fromform->nama_idp;
     $idp->userid     = $USER->id;
     $idp->mulai_date = $fromform->mulai_date;
     $idp->akhir_date = $fromform->akhir_date;
-    $idp->status     = 0; // Default awal selalu 0 (Draft)
-
-    // Mengonversi nama atasan (username/NIK) menjadi User ID Moodle sesuai referensi asli Anda
-    $atasan_userid = $DB->get_field('user', 'id', ['username' => trim($fromform->nik_atasan)], IGNORE_MISSING);
-    $idp->atasan_id = $atasan_userid ?: 0;
+    
+    // Cari 'id' angka user Moodle berdasarkan 'nik_atasan' yang dikirim dari form
+    $atasan_id = 0;
+    if (!empty($fromform->nik_atasan)) {
+        $atasan_user = $DB->get_record('user', ['username' => trim($fromform->nik_atasan), 'deleted' => 0]);
+        if ($atasan_user) {
+            $atasan_id = (int)$atasan_user->id;
+        }
+    }
+    $idp->atasan_id = $atasan_id;
 
     if ($edit_idp_id) {
-        // --- PROSES UPDATE (EDIT DATA LAMA) ---
+        // --- PROSES UPDATE ---
         $idp->id = $edit_idp_id;
         $DB->update_record('local_myidpebi', $idp);
         
-        // Redirect langsung ke halaman rincian program tersebut (view_details.php)
         $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $edit_idp_id]);
-        redirect($redirect_url, 'IDP Program berhasil diperbarui!', null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect_url, 'Program IDP berhasil diperbarui.', null, \core\output\notification::NOTIFY_SUCCESS);
     } else {
-        // --- PROSES INSERT (BUAT BARU) ---
+        // --- PROSES INSERT ---
+        $idp->status      = 0;
         $idp->timecreated = time();
-        // Tangkap ID record baru yang berhasil diciptakan oleh database
+        
         $new_idp_id = $DB->insert_record('local_myidpebi', $idp);
         
-        // 🚀 KUNCI UX BARU: Langsung dialihkan ke view_details membawa ID baru hasil create
         $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $new_idp_id]);
-        redirect($redirect_url, 'IDP Program berhasil diajukan! Silakan lengkapi daftar rencana aktivitas Anda.', null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect_url, 'Program IDP berhasil dibuat, silahkan minta pembimbing anda untuk approval', null, \core\output\notification::NOTIFY_SUCCESS);
     }
 }
 
@@ -90,8 +104,7 @@ echo $OUTPUT->header();
 
 echo '<div class="card shadow-sm">';
 echo '  <div class="card-body">';
-echo '      <h3 class="mb-4">' . ($edit_idp_id ? '<i class="fa fa-edit text-warning"></i> Edit Rencana IDP' : '<i class="fa fa-plus-circle text-primary"></i> Buat Pengajuan IDP Baru') . '</h3>';
-// Tampilkan Form
+echo '      <h3 class="mb-4">' . ($edit_idp_id ? '<i class="fa fa-edit text-warning"></i> Edit Rencana IDP' : '<i class="fa fa-plus-circle text-primary"></i> Tambah Program IDP Baru') . '</h3>';
 $mform->display();
 echo '  </div>';
 echo '</div>';

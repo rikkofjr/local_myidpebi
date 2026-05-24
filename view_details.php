@@ -235,20 +235,44 @@ echo '</div>';
 
 
 // Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
+
 if ($is_pembimbing || $is_atasan_langsung) {
-    echo '<div class="mt-4 p-3 border-top bg-light text-right">';
+    echo '<div class="mt-4 p-3 border-top bg-light">';
+    
     if ($idp->status == 0) {
         $approve_url = new moodle_url($url, ['approve' => 1, 'sesskey' => sesskey()]);
         $confirm_msg = "Apakah Anda yakin ingin MENYETUJUI program IDP ini untuk segera dilaksanakan?";
-        echo '<a href="'.$approve_url.'" class="btn btn-primary" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check"></i> Setujui Program</a>';
+        
+        // Menggunakan d-flex agar teks instruksi di kiri dan tombol di kanan sejajar sempurna
+        echo '<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
+        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
+        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-info-circle mr-2"></i>Konfirmasi Persetujuan IDP</h5>';
+        echo '        <p class="mb-0 text-primary">Pastikan karyawan ybs. sudah melakukan konsultasi dengan Anda mengenai kegiatan yang akan dijalankan.</p>';
+        echo '    </div>';
+        echo '    <div class="text-nowrap">';
+        echo '        <a href="'.$approve_url.'" class="btn btn-primary px-4 py-2" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check mr-2"></i>Setujui Program</a>';
+        echo '    </div>';
+        echo '</div>';
+
     } else if ($idp->status == 1) {
         $verify_url = new moodle_url($url, ['verify' => 1, 'sesskey' => sesskey()]);
         $confirm_msg = "Apakah Anda yakin ingin memverifikasi bahwa program IDP ini telah SELESAI?";
-        echo '<a href="'.$verify_url.'" class="btn btn-success" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-flag-checkered"></i> Verifikasi Selesai</a>';
+        
+        // Menggunakan alert-warning/alert-success untuk membedakan tahapan verifikasi penutupan dokumen
+        echo '<div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
+        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
+        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-flag-checkered mr-2"></i>Verifikasi Penyelesaian Program</h5>';
+        echo '        <p class="mb-0 text-black">Lakukan verifikasi akhir jika semua rincian aktivitas dan evaluasi mandiri (self-assessment) sudah terisi lengkap oleh karyawan ybs.</p>';
+        echo '    </div>';
+        echo '    <div class="text-nowrap">';
+        echo '        <a href="'.$verify_url.'" class="btn btn-success px-4 py-2 text-white" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check-circle mr-2"></i>Verifikasi Selesai</a>';
+        echo '    </div>';
+        echo '</div>';
     }
-    echo '</div>';
+    
+    echo '</div>'; // Penutup bg-light
 }
-echo '</div></div>';
+echo '</div></div>'; // Penutup card Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
 
 // --- DAFTAR AKTIVITAS ---
 echo '<div class="d-flex justify-content-between align-items-center mb-3">';
