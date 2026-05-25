@@ -32,16 +32,16 @@ $idp = $DB->get_record_sql("SELECT i.*,
                              LEFT JOIN {user} vif ON i.verified_by = vif.id
                              WHERE i.id = ?", [$idp_id]);
 
-// =========================================================================
-// SEMENTARA: MASUKKAN KODE DEBUG INI UNTUK MELIHAT ISI DATA ASLI DATABASE
-// =========================================================================
-echo "<div style='background:#fff; color:#000; padding:20px; z-index:9999; position:relative;'>";
-echo "<h3>Hasil Pengambilan Data Objek IDP:</h3>";
-echo "<pre>";
-print_r($idp);
-echo "</pre>";
-echo "</div>";
-die(); // Menghentikan halaman agar tidak me-render HTML bawah
+// // =========================================================================
+// // SEMENTARA: MASUKKAN KODE DEBUG INI UNTUK MELIHAT ISI DATA ASLI DATABASE
+// // =========================================================================
+// echo "<div style='background:#fff; color:#000; padding:20px; z-index:9999; position:relative;'>";
+// echo "<h3>Hasil Pengambilan Data Objek IDP:</h3>";
+// echo "<pre>";
+// print_r($idp);
+// echo "</pre>";
+// echo "</div>";
+// die(); // Menghentikan halaman agar tidak me-render HTML bawah
 
 if (!$idp) {
     die("Error Database: Data IDP tidak ditemukan.");
