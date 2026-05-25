@@ -24,8 +24,11 @@ $idp = $DB->get_record_sql("SELECT i.*,
                              JOIN {user} k ON i.userid = k.id
                              JOIN {user} p ON i.atasan_id = p.id 
                              /* Join custom profile field karyawan untuk mencari NIK Atasan Langsung */
-                             LEFT JOIN {user_info_data} uid ON uid.userid = k.id
-                             LEFT JOIN {user_info_field} uif ON uid.fieldid = uif.id AND uif.shortname = 'atasan_langsung'
+                            --  LEFT JOIN {user_info_data} uid ON uid.userid = k.id
+                            --  LEFT JOIN {user_info_field} uif ON uid.fieldid = uif.id AND uif.shortname = 'atasan_langsung'
+
+                             LEFT JOIN {user_info_field} uif ON uif.shortname = 'atasan_langsung'
+                             LEFT JOIN {user_info_data} uid ON uid.userid = k.id AND uid.fieldid = uif.id
                              /* Map NIK tersebut ke user Moodle asli */
                              LEFT JOIN {user} al ON al.username = uid.data
                              LEFT JOIN {user} app ON i.approved_by = app.id
