@@ -62,25 +62,67 @@ if ($delete_act && confirm_sesskey()) {
     redirect($url, 'Aktivitas berhasil dibatalkan.');
 }
 
+
 // Validasi Hak Otorisasi "ATAU" (Pembimbing Terpilih ATAU Atasan Langsung Profil)
 $is_pembimbing = ($USER->id == $idp->atasan_id);
 $is_atasan_langsung = (!empty($idp->atasan_langsung_id) && $USER->id == $idp->atasan_langsung_id);
 
+// 1. LOGIKA AKSI APPROVAL (Status 0 -> 1)
 if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
-    $idp->status = 1; 
-    $idp->approved_by = $USER->id; // Log Audit Trail
-    $DB->update_record('local_myidpebi', $idp);
-    redirect($url, 'IDP telah disetujui.');
+    
+    // Membuat objek bersih baru agar tidak bentrok dengan data query SQL ($idp)
+    $upd = new stdClass();
+    $upd->id = $idp_id;
+    $upd->status = 1; 
+    $upd->approved_by = $USER->id;
+    $upd->timeapproved = time();
+    
+    $DB->update_record('local_myidpebi', $upd);
+
+    // Insert ke dalam log
+    $event = \local_myidpebi\event\idp_status_changed::create([
+        'objectid' => $idp_id,
+        'userid'   => $USER->id,
+        'context'  => context_system::instance(),
+        'other'    => [
+            'status_code' => 1 
+        ]
+    ]);
+    $event->trigger();
+
+    // redirect halaman
+    redirect($url, 'IDP telah disetujui.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
+// 2. LOGIKA AKSI VERIFIKASI SELESAI (Status 1 -> 2)
 if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
-    $idp->status = 2; 
-    $idp->verified_by = $USER->id; // Log Audit Trail
-    $DB->update_record('local_myidpebi', $idp);
-    redirect($url, 'IDP telah diverifikasi selesai.');
+    
+    $upd = new stdClass();
+    $upd->id = $idp_id;
+    $upd->status = 2; 
+    $upd->verified_by = $USER->id;
+    $upd->timeverified = time();
+    
+    $DB->update_record('local_myidpebi', $upd);
+
+    // Insert ke dalam log
+    $event = \local_myidpebi\event\idp_status_changed::create([
+        'objectid' => $idp_id,
+        'userid'   => $USER->id,
+        'context'  => context_system::instance(),
+        'other'    => [
+            'status_code' => 2 
+        ]
+    ]);
+    $event->trigger();
+
+    // Redirect halaman
+    redirect($url, 'IDP telah diverifikasi selesai.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
+// Setelah seluruh logika aksi aman dan tidak ada redirect yang dipicu, baru render header
 echo $OUTPUT->header();
+// ///ada update--
 
 
 // =========================================================================
@@ -132,7 +174,7 @@ echo '                </div>';
 echo '                <h6 class="mt-2 mb-1 font-weight-bold '.$class_step2.'">2. Realisasi & JP</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status == 0) {
-    echo '                    Kunci pasif. Terbuka otomatis setelah rencana disetujui Atasan.';
+    echo '                    Kunci pasif. Terbuka otomatis setelah rencana disetujui Pembimbing.';
 } else if ($idp->status == 1) {
     echo '                    <span class="text-warning font-weight-bold">Langkah Anda Sekarang:</span>
                                 <br>Laksanakan aktivitas, isi input Jam Pelajaran (JP), dan upload evidence dari aktivitas tersebut. <br/>Jika sudah terisi lakukan self assement ';
@@ -161,7 +203,7 @@ echo '    </div>';
 echo '</div>';
 
 
-// --- TAMPILAN DETAIL INFORMASI IDP (100% Sesuai UI/UX Anda) ---
+// --- TAMPILAN DETAIL INFORMASI IDP KARYAWAN ---
 echo '<div class="card mb-4 border-left-primary shadow-sm"><div class="card-body">';
 $status_info = local_myidpebi_get_status_info($idp->status);
 
