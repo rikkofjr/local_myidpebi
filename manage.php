@@ -91,7 +91,7 @@ if ($records) {
             $badge_class = 'badge-success';
             
             // Hitung total JP (mengambil data dari tabel aktivitas)
-            $total_jp = $DB->get_field_sql("SELECT SUM(jumlah_jp) FROM {local_myidpebi_act} WHERE idp_id = ?", [$idp->id]);
+            $total_jp = $DB->get_field_sql("SELECT SUM(jumlah_jp_realisasi) FROM {local_myidpebi_act} WHERE idp_id = ?", [$idp->id]);
             $display_jp = $total_jp ?: 0;
         } else if ($idp->status == 1) {
             $status_text = 'Disetujui / Proses';

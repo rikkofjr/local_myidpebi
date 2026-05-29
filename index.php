@@ -45,14 +45,14 @@ echo '<a href="manage.php" class="btn btn-outline-primary">Halaman Approval</a><
 
 // --- 3. TABEL DAFTAR IDP ---
 echo $OUTPUT->heading('Daftar IDP Saya', 3);
-echo '<p class="text-muted"><small>* Klik Nama Kegiatan untuk rincian. Edit/Hapus hanya tersedia saat status Menunggu.</small></p>';
+echo '<p class="text-muted"><small>* Klik Program untuk rincian. Edit/Hapus hanya tersedia saat status Menunggu.</small></p>';
 
 $params = ['userid' => $USER->id];
 $sql_count = "SELECT COUNT(id) FROM {local_myidpebi} WHERE userid = :userid";
 $total_records = $DB->count_records_sql($sql_count, $params);
 
 $sql = "SELECT i.*, u.firstname, u.lastname, 
-               (SELECT SUM(a.jumlah_jp) FROM {local_myidpebi_act} a WHERE a.idp_id = i.id) as total_jp
+               (SELECT SUM(a.jumlah_jp_realisasi) FROM {local_myidpebi_act} a WHERE a.idp_id = i.id) as total_jp
         FROM {local_myidpebi} i 
         LEFT JOIN {user} u ON i.atasan_id = u.id 
         WHERE i.userid = :userid 
@@ -63,7 +63,7 @@ $records = $DB->get_records_sql($sql, $params, $page_num * $per_page, $per_page)
 if ($records) {
     echo $OUTPUT->paging_bar($total_records, $page_num, $per_page, $url);
     echo '<table class="table table-bordered table-striped"><thead><tr>';
-    echo '<th>Nama Kegiatan</th><th>Pembimbing</th><th>Mulai</th><th>Target</th><th>Total JP</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
+    echo '<th>Program IDP</th><th>Pembimbing</th><th>Mulai</th><th>Target</th><th>Total JP</th><th>Status</th><th>Aksi</th></tr></thead><tbody>';
     
     foreach ($records as $idp) {
         // 🟢 SINKRONISASI TOTAL: Memanggil fungsi master dari lib.php

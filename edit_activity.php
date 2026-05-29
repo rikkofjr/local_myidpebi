@@ -25,11 +25,18 @@ $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title($act_id ? ($is_clone ? 'Duplikat Aktivitas' : 'Edit Aktivitas') : 'Tambah Aktivitas');
 
+// 🟢 SEBELUM LINE 29: Matikan deprecated strict notice PHP 8 secara sementara
+$old_error_level = error_reporting();
+error_reporting($old_error_level & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE);
+
 // 1. Inisialisasi Form TERLEBIH DAHULU agar elemen 'evidence_file' terdaftar di sistem Moodle Form
 $mform = new \local_myidpebi\forms\act_form($url->out(false), [
     'status' => $idp->status,
     'act_id' => $act_id
 ]);
+
+// 🟢 SETELAH LINE 32: Kembalikan level error asli Moodle setelah form selesai dimuat
+error_reporting($old_error_level);
 
 if ($act_id) {
     $activity = $DB->get_record('local_myidpebi_act', ['id' => $act_id], '*', MUST_EXIST);
@@ -42,23 +49,28 @@ if ($act_id) {
         $form_data->id = $activity->id;
     }
     
-    $form_data->idp_id              = $activity->idp_id;
-    $form_data->aspek               = $activity->aspek;
-    $form_data->nilai_ipp           = $activity->nilai_ipp;
-    $form_data->tuntutan_sekarang   = $activity->tuntutan_sekarang;
-    $form_data->tuntutan_berikutnya = $activity->tuntutan_berikutnya;
-    $form_data->tuntutan_lingkungan = $activity->tuntutan_lingkungan;
-    $form_data->area_pengembangan   = $activity->area_pengembangan;
-    $form_data->jenis_kegiatan      = $activity->jenis_kegiatan;
-    $form_data->nama_activity       = $activity->nama_activity;
-    $form_data->waktu_teks          = $activity->waktu_teks;
+    $form_data->idp_id                          = $activity->idp_id;
+    $form_data->aspek                           = $activity->aspek;
+    $form_data->nilai_ipp                       = $activity->nilai_ipp;
+    // FIXED: Menyesuaikan properti DB asal ke field form split (_performance & _kompetensi)
+    $form_data->tuntutan_sekarang_performance   = $activity->tuntutan_sekarang_performance ?? '';
+    $form_data->tuntutan_sekarang_kompetensi    = $activity->tuntutan_sekarang_kompetensi ?? '';
+    $form_data->tuntutan_berikutnya_performance = $activity->tuntutan_berikutnya_performance ?? '';
+    $form_data->tuntutan_berikutnya_kompetensi  = $activity->tuntutan_berikutnya_kompetensi ?? '';
+    $form_data->tuntutan_lingkungan_performance = $activity->tuntutan_lingkungan_performance ?? '';
+    $form_data->tuntutan_lingkungan_kompetensi  = $activity->tuntutan_lingkungan_kompetensi ?? '';
+
+    $form_data->jenis_kegiatan                  = $activity->jenis_kegiatan;
+    $form_data->nama_activity                   = $activity->nama_activity;
+    $form_data->waktu_teks                      = $activity->waktu_teks;
+    $form_data->jumlah_jp_perencanaan           = $activity->jumlah_jp_perencanaan;
 
     // Tampilkan angka JP lama di form jika sedang EDIT biasa. 
     // Jika sedang DUPLIKAT (is_clone), form JP tetap dikosongkan (0).
     if (!$is_clone) {
-        $form_data->jumlah_jp       = $activity->jumlah_jp;
+        $form_data->jumlah_jp_realisasi       = $activity->jumlah_jp_realisasi;
     } else {
-        $form_data->jumlah_jp       = 0;
+        $form_data->jumlah_jp_realisasi       = 0;
     }
     
     // Siapkan draft file hanya jika dalam mode edit biasa (bukan kloning)
@@ -91,28 +103,33 @@ if ($mform->is_cancelled()) {
     // Logika Rencana (Selalu tangkap data form untuk record baru/duplikat maupun edit)
     $act->aspek               = $data->aspek;
     $act->nilai_ipp           = $data->nilai_ipp;
-    $act->tuntutan_sekarang   = isset($data->tuntutan_sekarang) ? $data->tuntutan_sekarang : '-';
-    $act->tuntutan_berikutnya = isset($data->tuntutan_berikutnya) ? $data->tuntutan_berikutnya : '-';
-    $act->tuntutan_lingkungan = isset($data->tuntutan_lingkungan) ? $data->tuntutan_lingkungan : '-';
-    $act->area_pengembangan   = isset($data->area_pengembangan) ? $data->area_pengembangan : '-';
+    // FIXED: Mengambil data pecahan form untuk disimpan ke kolom DB masing-masing
+    $act->tuntutan_sekarang_performance   = $data->tuntutan_sekarang_performance ?? '-';
+    $act->tuntutan_sekarang_kompetensi    = $data->tuntutan_sekarang_kompetensi ?? '-';
+    $act->tuntutan_berikutnya_performance = $data->tuntutan_berikutnya_performance ?? '-';
+    $act->tuntutan_berikutnya_kompetensi  = $data->tuntutan_berikutnya_kompetensi ?? '-';
+    $act->tuntutan_lingkungan_performance = $data->tuntutan_lingkungan_performance ?? '-';
+    $act->tuntutan_lingkungan_kompetensi  = $data->tuntutan_lingkungan_kompetensi ?? '-';
+
     $act->jenis_kegiatan      = $data->jenis_kegiatan;
     $act->nama_activity       = $data->nama_activity;
     $act->waktu_teks          = $data->waktu_teks;
+    $act->jumlah_jp_perencanaan          = $data->jumlah_jp_perencanaan;
 
     // Logika Realisasi JP (Hanya disimpan jika status dokumen berjalan dan bukan duplikasi baru)
     if ($idp->status == 1 && !$is_clone) {
         // Jika form mengirimkan angka JP, pakai angka tersebut. Jika kosong/null, gunakan fallback ke angka 0
-        $input_jp = isset($data->jumlah_jp) ? (int)$data->jumlah_jp : 0;
+        $input_jp = isset($data->jumlah_jp_realisasi) ? (int)$data->jumlah_jp_realisasi : 0;
         
         // JALUR EDIT: Jika karyawan mengedit data lama dan inputan baru di form kosong, pertahankan data JP lama dari DB
         if ($act_id && $input_jp === 0) {
-            $act->jumlah_jp = isset($activity->jumlah_jp) ? (int)$activity->jumlah_jp : 0;
+            $act->jumlah_jp_realisasi = isset($activity->jumlah_jp_realisasi) ? (int)$activity->jumlah_jp_realisasi : 0;
         } else {
-            $act->jumlah_jp = $input_jp;
+            $act->jumlah_jp_realisasi = $input_jp;
         }
     } else {
         // Jika masih berstatus Draft (0) atau sedang menduplikat baru, paksa JP ke 0
-        $act->jumlah_jp = 0;
+        $act->jumlah_jp_realisasi = 0;
     }
 
     // Eksekusi CRUD Database dengan dukungan Duplikasi

@@ -14,7 +14,7 @@ class idp_form extends \moodleform {
 
         $mform->addElement('header', 'header_idp', 'Informasi Program IDP');
         
-        $mform->addElement('text', 'nama_idp', 'Nama Program IDP');
+        $mform->addElement('text', 'nama_idp', 'Program IDP');
         $mform->setType('nama_idp', PARAM_TEXT);
         $mform->addRule('nama_idp', null, 'required', null, 'client');
 
@@ -35,12 +35,28 @@ class idp_form extends \moodleform {
         ];
 
         // MEMPERTAHANKAN NAMA ELEMEN ASLI ANDA: 'nik_atasan'
-        $mform->addElement('autocomplete', 'nik_atasan', 'NIK Pembimbing', $options, $autocomplete_options);
+        $mform->addElement('autocomplete', 'nik_atasan', 'Atasan Anda', $options, $autocomplete_options);
         $mform->addRule('nik_atasan', null, 'required', null, 'client');
         $mform->addHelpButton('nik_atasan', 'help_pembimbing', 'local_myidpebi');
 
+        //Kunci pembimbing menjadi atasan langsung
+        $mform->freeze('nik_atasan');
+
+        // Logika Otomatisasi Tanggal Awal & Akhir Tahun
+        $current_year = date('Y'); // Mengambil tahun aktif saat form dibuka (contoh: 2026)
+        
+        // Membuat selector tanggal default mengarah ke awal dan akhir tahun
+        $default_start = strtotime("{$current_year}-01-01 00:00:00");
+        $default_end   = strtotime("{$current_year}-12-31 23:59:59");
+
+        // Definisikan elemen tanggal selector asli Anda
         $mform->addElement('date_selector', 'mulai_date', 'Tanggal Mulai');
+        $mform->setDefault('mulai_date', $default_start); // Set otomatis 1 Januari
+        $mform->freeze('mulai_date'); // Kunci agar karyawan tidak bisa mengubahnya
+
         $mform->addElement('date_selector', 'akhir_date', 'Target Selesai');
+        $mform->setDefault('akhir_date', $default_end); // Set otomatis 31 Desember
+        $mform->freeze('akhir_date'); // Kunci agar karyawan tidak bisa mengubahnya
 
         $this->add_action_buttons(true, 'Simpan Program');
     }

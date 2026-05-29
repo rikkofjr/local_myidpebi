@@ -50,10 +50,16 @@ if (!$idp) {
     die("Error Database: Data IDP tidak ditemukan.");
 }
 
-// 3. Hitung Total JP dari aktivitas yang sudah diverifikasi (tidak didelete)
+// 3.a Hitung Total JP 
+//Total JP rencana
+$total_jp_rencana = $DB->get_field_sql("SELECT SUM(jumlah_jp_perencanaan) 
+                                              FROM {local_myidpebi_act} 
+                                              WHERE idp_id = ? AND deleted = 0", [$idp_id]) ?: 0;
+
+//Total JP Realisasi
 $total_jp_verified = 0;
 if ($idp->status == 2) {
-    $total_jp_verified = $DB->get_field_sql("SELECT SUM(jumlah_jp) 
+    $total_jp_verified = $DB->get_field_sql("SELECT SUM(jumlah_jp_realisasi) 
                                               FROM {local_myidpebi_act} 
                                               WHERE idp_id = ? AND deleted = 0", [$idp_id]) ?: 0;
 }
@@ -229,6 +235,7 @@ echo '      <div class="mb-2"><strong>Status:</strong><br>' . $status_info->badg
 echo '      <div class="mb-2"><strong>Pembimbing / Coach:</strong><br>' . ($idp->p_nik ?: '-') . ' - ' . $idp->p_fname . ' ' . $idp->p_lname . '</div>';
 echo '      <div class="mb-2"><strong>Atasan Langsung (Sistem):</strong><br>' . ($idp->al_nik ?: '-') . ' - ' . $idp->al_fname . ' ' . $idp->al_lname . '</div>';
 echo '      <div class="mb-2"><strong>Periode Program:</strong><br>' . userdate($idp->mulai_date, '%d %b %Y') . ' s/d ' . userdate($idp->akhir_date, '%d %b %Y') . '</div>';
+echo '      <div class="mb-2"><strong>Total Perencanaan JP</strong><br>' . $total_jp_rencana. '</div>';
 echo '      <div class="mb-2 ' . ($idp->status == 2 ? 'text-success' : 'text-muted') . '">';
 echo '          <strong>Total JP Terverifikasi:</strong><br>';
 echo '          <span class="h5 font-weight-bold">' . $total_jp_verified . ' JP</span>';
@@ -237,36 +244,6 @@ if ($idp->status < 2) {
 }
 echo '      </div>';
 
-
-
-// =========================================================================
-// 🟢 LOGIKA TAMPILAN EVALUASI MANDIRI (SELF-ASSESSMENT)
-// =========================================================================
-$is_owner = ($USER->id == $idp->userid);
-
-if ((float)$idp->skor_efektivitas > 0) {
-    // 1. Jika kuesioner SUDAH DIISI, tampilkan card hasil skornya
-    echo '<div class="card mb-4 border-success">';
-    echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Self-Assessment</strong></div>';
-    echo '  <div class="card-body">';
-    echo '      <h4 class="card-title text-success">Skor Efektivitas IDP: ' . number_format($idp->skor_efektivitas, 2) . '%</h4>';
-    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
-    echo '  </div>';
-    echo '</div>';
-} else if ($idp->status == 1 && $is_owner) {
-    // 2. Jika BELUM DIISI, status sedang Running (1), dan dia pemiliknya, tampilkan Tombol Pemicu
-    $assessment_url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
-    echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';
-    echo '  <div>';
-    echo '      <h5><i class="fa fa-exclamation-triangle"></i> Self Assement IDP</h5>';
-    echo '      <p class="mb-0">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
-    echo '  </div>';
-    echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white">';
-    echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';
-    echo '  </a>';
-    echo '</div>';
-}
-// =========================================================================
 
 //wait
 // Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
@@ -290,48 +267,9 @@ if ($idp->status > 0) {
 echo '</div>';
 
 
-// Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
-
-if ($is_pembimbing || $is_atasan_langsung) {
-    echo '<div class="mt-4 p-3 border-top bg-light">';
-    
-    if ($idp->status == 0) {
-        $approve_url = new moodle_url($url, ['approve' => 1, 'sesskey' => sesskey()]);
-        $confirm_msg = "Apakah Anda yakin ingin MENYETUJUI program IDP ini untuk segera dilaksanakan?";
-        
-        // Menggunakan d-flex agar teks instruksi di kiri dan tombol di kanan sejajar sempurna
-        echo '<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
-        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
-        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-info-circle mr-2"></i>Konfirmasi Persetujuan IDP</h5>';
-        echo '        <p class="mb-0 text-primary">Pastikan karyawan ybs. sudah melakukan konsultasi dengan Anda mengenai kegiatan yang akan dijalankan.</p>';
-        echo '    </div>';
-        echo '    <div class="text-nowrap">';
-        echo '        <a href="'.$approve_url.'" class="btn btn-primary px-4 py-2" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check mr-2"></i>Setujui Program</a>';
-        echo '    </div>';
-        echo '</div>';
-
-    } else if ($idp->status == 1) {
-        $verify_url = new moodle_url($url, ['verify' => 1, 'sesskey' => sesskey()]);
-        $confirm_msg = "Apakah Anda yakin ingin memverifikasi bahwa program IDP ini telah SELESAI?";
-        
-        // Menggunakan alert-warning/alert-success untuk membedakan tahapan verifikasi penutupan dokumen
-        echo '<div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
-        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
-        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-flag-checkered mr-2"></i>Verifikasi Penyelesaian Program</h5>';
-        echo '        <p class="mb-0 text-black">Lakukan verifikasi akhir jika semua rincian aktivitas dan evaluasi mandiri (self-assessment) sudah terisi lengkap oleh karyawan ybs.</p>';
-        echo '    </div>';
-        echo '    <div class="text-nowrap">';
-        echo '        <a href="'.$verify_url.'" class="btn btn-success px-4 py-2 text-white" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check-circle mr-2"></i>Verifikasi Selesai</a>';
-        echo '    </div>';
-        echo '</div>';
-    }
-    
-    echo '</div>'; // Penutup bg-light
-}
-echo '</div></div>'; // Penutup card Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
 
 // --- DAFTAR AKTIVITAS ---
-echo '<div class="d-flex justify-content-between align-items-center mb-3">';
+echo '<div class="d-flex justify-content-between align-items-center mt-5 mb-3">';
 echo '  <h4 class="m-0">Rincian Aktivitas</h4>';
 
 if ($idp->status < 2 && $USER->id == $idp->userid) {
@@ -354,20 +292,29 @@ $activities = $DB->get_records('local_myidpebi_act', ['idp_id' => $idp_id], 'del
 
 echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
-echo '  <thead class="thead-light text-center">
+echo '  <thead class="table-light text-center align-middle">
             <tr>
-                <th>Aspek</th>
-                <th>Nilai</th>
-                <th>Tuntutan Pada Posisi <br/> Sekarang</th>
-                <th>Tuntutan Pada Posisi <br/> Berikutnya</th>
-                <th>Tuntutan Karena <br/> Lingkungan</th>
-                <th>Area Pengembangan yang perlu dikembangkan</th>
-                <th>Jenis</th>
-                <th>Aktivitas</th>
-                <th>JP</th>
-                <th>Waktu</th>
-                <th>Evidence</th>
-                <th width="120">Aksi</th>
+                <th rowspan="2">Aspek</th>
+                <th rowspan="2">Nilai</th>
+                <th colspan="2">Tuntutan Posisi Sekarang</th>
+                <th colspan="2">Tuntutan Posisi Berikutnya</th>
+                <th colspan="2">Tuntutan Perubahan Lingkungan</th>
+                <th rowspan="2">Jenis Kegiatan</th>
+                <th rowspan="2">Detail Aktivitas</th>
+                <th colspan="2">Jam Pelajaran (JP)</th>
+                <th rowspan="2">Periode Waktu</th>
+                <th rowspan="2">Evidence</th>
+                <th rowspan="2" width="100">Aksi</th>
+            </tr>
+            <tr>
+                <th>Performance</th>
+                <th>Kompetensi</th>
+                <th>Performance</th>
+                <th>Kompetensi</th>
+                <th>Performance</th>
+                <th>Kompetensi</th>
+                <th>Rencana</th>
+                <th>Realisasi</th>
             </tr>
         </thead>
         <tbody>';
@@ -398,10 +345,12 @@ if ($activities) {
         // =========================================================================
         $textarea_box_style = 'style="max-height: 95px; overflow-y: auto; font-size: 15px; line-height: 1.4; padding: 6px; background: rgba(0,0,0,0.03); border-radius: 4px; border: 1px solid #e9ecef; white-space: pre-wrap; min-width: 150px;"';
 
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->area_pengembangan) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang_performance) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang_kompetensi) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya_performance) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya_kompetensi) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan_performance) . "</div></td>";
+        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan_kompetensi) . "</div></td>";
 
         // echo "  <td {$text_style}>{$a->tuntutan_sekarang}</td>";
         // echo "  <td {$text_style}>{$a->tuntutan_berikutnya}</td>";
@@ -411,7 +360,8 @@ if ($activities) {
 
         echo "  <td {$text_style} class='text-center'>{$a->jenis_kegiatan}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
-        echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp}</td>";
+        echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_perencanaan}</td>";
+        echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_realisasi}</td>";
         echo "  <td {$text_style}>{$a->waktu_teks}</td>";
         echo "  <td class='text-center'>{$file_link}</td>";
         echo "  <td class='text-center'>";
@@ -438,4 +388,87 @@ if ($activities) {
 }
 
 echo '  </tbody></table></div>';
+
+
+// =========================================================================
+// 🟢 LOGIKA TAMPILAN EVALUASI MANDIRI (SELF-ASSESSMENT)
+// =========================================================================
+$is_owner = ($USER->id == $idp->userid);
+echo '<div class="mt-4 p-3 border-top bg-light">';
+
+if ((float)$idp->skor_efektivitas > 0) {
+    // 1. Jika kuesioner SUDAH DIISI, tampilkan card hasil skornya
+    echo '<div class="card mb-4 border-success">';
+    echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Self-Assessment</strong></div>';
+    echo '  <div class="card-body">';
+    echo '      <h4 class="card-title text-success">Skor Efektivitas IDP: ' . number_format($idp->skor_efektivitas, 2) . '</h4>';
+    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
+    echo '  </div>';
+    echo '</div>';
+    // milik atasan
+    echo '<div class="card mb-4 border-success">';
+    echo '  <div class="card-header bg-warning text-white"><strong><i class="fa fa-check-circle"></i> Hasil Penilaian Atasan</strong></div>';
+    echo '  <div class="card-body">';
+    echo '      <h4 class="card-title text-success">Penilaian Atasan: ' . number_format($idp->skor_atasan, 2) . '</h4>';
+    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan atasan:</strong><br>' . s($idp->kesimpulan_atasan) . '</p>';
+    echo '  </div>';
+    echo '</div>';
+} else if ($idp->status == 1 && $is_owner) {
+    // 2. Jika BELUM DIISI, status sedang Running (1), dan dia pemiliknya, tampilkan Tombol Pemicu
+    $assessment_url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
+    echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';
+    echo '  <div>';
+    echo '      <h5><i class="fa fa-exclamation-triangle"></i> Self Assement IDP</h5>';
+    echo '      <p class="mb-0">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
+    echo '  </div>';
+    echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white">';
+    echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';
+    echo '  </a>';
+    echo '</div>';
+}
+echo '</div>';
+// =========================================================================
+
+// Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
+
+if ($is_pembimbing || $is_atasan_langsung) {
+    echo '<div class="mt-4 p-3 border-top bg-light">';
+    
+    if ($idp->status == 0) {
+        $approve_url = new moodle_url($url, ['approve' => 1, 'sesskey' => sesskey()]);
+        $confirm_msg = "Apakah Anda yakin ingin MENYETUJUI program IDP ini untuk segera dilaksanakan?";
+        
+        // Menggunakan d-flex agar teks instruksi di kiri dan tombol di kanan sejajar sempurna
+        echo '<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
+        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
+        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-info-circle mr-2"></i>Konfirmasi Persetujuan IDP</h5>';
+        echo '        <p class="mb-0 text-primary">Pastikan karyawan ybs. sudah melakukan konsultasi dengan Anda mengenai kegiatan yang akan dijalankan.</p>';
+        echo '    </div>';
+        echo '    <div class="text-nowrap">';
+        echo '        <a href="'.$approve_url.'" class="btn btn-primary px-4 py-2" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check mr-2"></i>Setujui Program</a>';
+        echo '    </div>';
+        echo '</div>';
+
+    } else if ($idp->status == 1) {
+        // 🟢 PERBAIKAN: Ubah URL agar mengarah ke halaman form kuesioner assessment_atasan.php
+        $verify_url = new moodle_url('/local/myidpebi/assessment_atasan.php', ['id' => $idp->id]);
+        
+        // Menggunakan alert-warning/alert-success untuk membedakan tahapan verifikasi penutupan dokumen
+        echo '<div class="alert alert-warning d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
+        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
+        echo '        <h5 class="alert-heading mb-1"><i class="fa fa-flag-checkered mr-2"></i>Verifikasi & Penilaian Efektivitas Program</h5>';
+        echo '        <p class="mb-0 text-black">Lakukan pengisian kuesioner penilaian efektivitas dan verifikasi akhir jika semua rincian aktivitas sudah diperiksa dengan lengkap.</p>';
+        echo '    </div>';
+        echo '    <div class="text-nowrap">';
+        // 🟢 PERBAIKAN: Hilangkan onclick confirm() karena konfirmasi/submit akan ditangani langsung di dalam halaman form kuesioner
+        echo '        <a href="'.$verify_url.'" class="btn btn-success px-4 py-2 text-white"><i class="fa fa-pencil-square-o mr-2"></i>Isi Penilaian & Verifikasi</a>';
+        echo '    </div>';
+        echo '</div>';
+    }
+    
+    echo '</div>'; // Penutup bg-light
+}
+echo '</div></div>'; // Penutup card Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
+
+
 echo $OUTPUT->footer();

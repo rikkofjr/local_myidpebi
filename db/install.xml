@@ -14,8 +14,11 @@
                 <FIELD NAME="approved_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang menyetujui program"/>
                 <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
 
-                <FIELD NAME="skor_efektivitas" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="false" DEFAULT="0.00" COMMENT="Hasil persentase self-assessment efektivitas IDP"/>
+                <FIELD NAME="skor_efektivitas" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="false" DEFAULT="0.00" COMMENT="Hasil penilaian self assesment atas efektivitas IDP"/>
                 <FIELD NAME="kesimpulan_karyawan" TYPE="text" NOTNULL="false" COMMENT="Catatan evaluasi mandiri oleh karyawan"/>
+                <FIELD NAME="skor_atasan" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="false" DEFAULT="0.00" COMMENT="Hasil penilaian atasan atas efektivitas IDP"/>
+                <FIELD NAME="kesimpulan_atasan" TYPE="text" NOTNULL="false" COMMENT="Catatan evaluasi oleh atasan"/>
+                <FIELD NAME="kesimpulan_hcm" TYPE="text" NOTNULL="false" COMMENT="Catatan evaluasi oleh LDC/Manager role LMS"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -26,23 +29,38 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="idp_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="aspek" TYPE="char" LENGTH="20" NOTNULL="true"/>
+                <FIELD NAME="aspek" TYPE="char" LENGTH="20" NOTNULL="false"/>
                 <FIELD NAME="nilai_ipp" TYPE="char" LENGTH="255" DEFAULT="0" NOTNULL="true"/>
-                <FIELD NAME="tuntutan_sekarang" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang"/>
-                <FIELD NAME="tuntutan_berikutnya" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya"/>
-                <FIELD NAME="tuntutan_lingkungan" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan"/>
-                <FIELD NAME="area_pengembangan" TYPE="text"  NOTNULL="false"  COMMENT="Area Pengembangan"/>
-
-                <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="50" NOTNULL="true"/>
+                <FIELD NAME="tuntutan_sekarang_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Performance)"/>
+                <FIELD NAME="tuntutan_sekarang_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Kompetensi)"/>
+                <FIELD NAME="tuntutan_berikutnya_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Performance)"/>
+                <FIELD NAME="tuntutan_berikutnya_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Kompetensi)"/>
+                <FIELD NAME="tuntutan_lingkungan_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Performance)"/>
+                <FIELD NAME="tuntutan_lingkungan_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Kompetensi)"/>
+                <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="100" NOTNULL="true"/>
                 <FIELD NAME="nama_activity" TYPE="char" LENGTH="255" NOTNULL="true"/>
-                <FIELD NAME="jumlah_jp" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="jumlah_jp_perencanaan" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="waktu_teks" TYPE="char" LENGTH="255" NOTNULL="true"/>
+
+                <FIELD NAME="jumlah_jp_realisasi" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="evidence_fileid" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0"/>
                 <FIELD NAME="deleted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=Aktif, 1=Dibatalkan"/>
             </FIELDS>
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
                 <KEY NAME="fk_idp" TYPE="foreign" FIELDS="idp_id" REFTABLE="local_myidpebi" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="local_myidpebi_jenis_kegiatan" COMMENT="Master aturan batasan JP Jenis Kegiatan IDP">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Nama opsi jenis kegiatan pengembangan"/>
+                <FIELD NAME="jp_min" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" COMMENT="Batas minimum input JP"/>
+                <FIELD NAME="jp_max" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" COMMENT="Batas maksimum input JP"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
         </TABLE>
     </TABLES>
