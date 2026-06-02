@@ -83,7 +83,7 @@ $total_records = $DB->count_records_sql($sql_count, $params);
 $sql = "SELECT i.*, 
                u.firstname, u.lastname, u.username as nik,
                a.firstname as atasan_fn, a.lastname as atasan_ln,
-               (SELECT SUM(act.jumlah_jp) FROM {local_myidpebi_act} act WHERE act.idp_id = i.id) as total_jp
+               (SELECT SUM(act.jumlah_jp_realisasi) FROM {local_myidpebi_act} act WHERE act.idp_id = i.id) as total_jp
         FROM {local_myidpebi} i
         JOIN {user} u ON i.userid = u.id
         LEFT JOIN {user} a ON i.atasan_id = a.id
@@ -108,7 +108,8 @@ if ($records) {
             <th>Pembimbing</th>
             <th>Status</th>
             <th>Total JP</th>
-            <th>Efektivitas</th>
+            <th>Penilaian Self Assesment</th>
+            <th>Penilaian Atasan</th>
             <th>Aksi</th>
           </tr></thead><tbody>';
 
@@ -132,6 +133,7 @@ if ($records) {
         // Total JP hanya muncul angka jika status 2 (Verified)
         echo "<td><strong>" . ($idp->status == 2 ? ($idp->total_jp ?: 0) : '-') . "</strong></td>";
         echo "<td>{$idp->skor_efektivitas}</td>";
+        echo "<td>{$idp->skor_atasan}</td>";
         echo "<td>
             <a href='{$view_url}' class='btn btn-sm btn-info'><i class='fa fa-eye'></i> </a>
             <a href='{$edit_url}' class='btn btn-sm btn-warning'><i class='fa fa-pencil'></i> </a>

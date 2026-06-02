@@ -25,6 +25,12 @@ $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title($act_id ? ($is_clone ? 'Duplikat Aktivitas' : 'Edit Aktivitas') : 'Tambah Aktivitas');
 
+// 5. Breadcrumb Navigasi
+$PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'));
+// Tambahkan link dinamis ke halaman View Details IDP yang sedang aktif saat ini
+$view_details_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
+$PAGE->navbar->add('Detail IDP (' . s($idp->nama_idp) . ')', $view_details_url);
+
 // 🟢 SEBELUM LINE 29: Matikan deprecated strict notice PHP 8 secara sementara
 $old_error_level = error_reporting();
 error_reporting($old_error_level & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE);
@@ -60,7 +66,7 @@ if ($act_id) {
     $form_data->tuntutan_lingkungan_performance = $activity->tuntutan_lingkungan_performance ?? '';
     $form_data->tuntutan_lingkungan_kompetensi  = $activity->tuntutan_lingkungan_kompetensi ?? '';
 
-    $form_data->jenis_kegiatan                  = $activity->jenis_kegiatan;
+    $form_data->learning_activity            = (int)$activity->learning_activity;
     $form_data->nama_activity                   = $activity->nama_activity;
     $form_data->waktu_teks                      = $activity->waktu_teks;
     $form_data->jumlah_jp_perencanaan           = $activity->jumlah_jp_perencanaan;
@@ -111,7 +117,7 @@ if ($mform->is_cancelled()) {
     $act->tuntutan_lingkungan_performance = $data->tuntutan_lingkungan_performance ?? '-';
     $act->tuntutan_lingkungan_kompetensi  = $data->tuntutan_lingkungan_kompetensi ?? '-';
 
-    $act->jenis_kegiatan      = $data->jenis_kegiatan;
+    $act->learning_activity = (int)$data->learning_activity;
     $act->nama_activity       = $data->nama_activity;
     $act->waktu_teks          = $data->waktu_teks;
     $act->jumlah_jp_perencanaan          = $data->jumlah_jp_perencanaan;

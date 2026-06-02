@@ -37,7 +37,7 @@
                 <FIELD NAME="tuntutan_berikutnya_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Kompetensi)"/>
                 <FIELD NAME="tuntutan_lingkungan_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Performance)"/>
                 <FIELD NAME="tuntutan_lingkungan_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Kompetensi)"/>
-                <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="100" NOTNULL="true"/>
+                <FIELD NAME="learning_activity" TYPE="char" LENGTH="100" NOTNULL="true"/>
                 <FIELD NAME="nama_activity" TYPE="char" LENGTH="255" NOTNULL="true"/>
                 <FIELD NAME="jumlah_jp_perencanaan" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="waktu_teks" TYPE="char" LENGTH="255" NOTNULL="true"/>
@@ -51,12 +51,15 @@
                 <KEY NAME="fk_idp" TYPE="foreign" FIELDS="idp_id" REFTABLE="local_myidpebi" REFFIELDS="id"/>
             </KEYS>
         </TABLE>
-        <TABLE NAME="local_myidpebi_jenis_kegiatan" COMMENT="Master aturan batasan JP Jenis Kegiatan IDP">
+        <TABLE NAME="local_myidpebi_learning_activity" COMMENT="Master aturan batasan JP Jenis Kegiatan IDP">
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
-                <FIELD NAME="jenis_kegiatan" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Nama opsi jenis kegiatan pengembangan"/>
+                <FIELD NAME="bentuk_cdp" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Bentuk CDP yang digunakan (Jalur Pendidikan, Pelatihan (Klasikal), Pelatihan (non klasikal))"/>
+                <FIELD NAME="tipe_aktivitas_cdp" TYPE="char" LENGTH="255" NOTNULL="false" COMMENT="Tipe Aktivitas (Formal/work based learning/self directed learning/others)"/>
+                <FIELD NAME="learning_activity" TYPE="char" LENGTH="255" NOTNULL="true" COMMENT="Nama opsi jenis kegiatan pengembangan"/>
                 <FIELD NAME="jp_min" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" COMMENT="Batas minimum input JP"/>
                 <FIELD NAME="jp_max" TYPE="int" LENGTH="5" NOTNULL="true" DEFAULT="0" COMMENT="Batas maksimum input JP"/>
+                <FIELD NAME="bentuk_evidence" TYPE="text"  NOTNULL="false"  COMMENT="Bentuk evidence yang digunakan untuk kegiatan tersebut"/>
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
             </FIELDS>
             <KEYS>

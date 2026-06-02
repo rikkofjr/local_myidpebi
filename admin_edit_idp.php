@@ -7,8 +7,10 @@ global $DB, $USER, $PAGE, $OUTPUT;
 
 // 1. PROTEKSI AKSES: Hanya Admin atau Manager yang punya hak akses laporan
 require_login();
+
 $context = context_system::instance();
-if (!is_siteadmin() && !has_capability('moodle/site:viewreports', $context)) {
+$is_manager = has_capability('moodle/site:viewreports', $context);
+if (!is_siteadmin() && !$is_manager) {
     throw new moodle_exception('nopermissiontoaccesspage', 'error');
 }
 
@@ -22,44 +24,71 @@ $PAGE->set_context($context);
 $PAGE->set_title('Admin: Edit Program IDP Karyawan');
 $PAGE->set_heading('Form Koreksi Data IDP (Override Admin)');
 
-// Panggil form idp_form yang sudah kita sempurnakan bersama sebelumnya
+// Panggil form idp_form
 $mform = new \local_myidpebi\forms\idp_form($url->out(false));
 
 if ($mform->is_cancelled()) {
-    // Jika batal, kembalikan ke panel monitoring admin
     redirect(new moodle_url('/local/myidpebi/admin_monitor.php'));
 } else if ($data = $mform->get_data()) {
-    
-    // Siapkan data objek untuk update database secara paksa oleh Admin
     $update = new stdClass();
-    $update->id          = $idp->id;
+    $update->id          = $idp_id;
     $update->nama_idp    = $data->nama_idp;
-    $update->nik_atasan  = $data->nik_atasan; // Menyimpan teks NIK Pembimbing baru dari autocomplete lokal
     $update->mulai_date  = $data->mulai_date;
     $update->akhir_date  = $data->akhir_date;
 
-    // Tambahan Opsional: Jika kolom pembimbing di database Anda menggunakan user id angka (atasan_id), 
-    // kita sinkronkan sekalian di sini agar alur approval otomatis berpindah ke orang baru.
+    // Sinkronisasi Pembimbing (atasan_id) berdasarkan input NIK Pembimbing
     $new_pembimbing = $DB->get_record('user', ['username' => trim($data->nik_atasan), 'deleted' => 0]);
     if ($new_pembimbing) {
         $update->atasan_id = $new_pembimbing->id;
     }
 
-    // Eksekusi update ke database
+    // Eksekusi update data utama IDP
     $DB->update_record('local_myidpebi', $update);
 
-    // Kembalikan ke halaman monitor dengan notifikasi sukses warna hijau
-    redirect(new moodle_url('/local/myidpebi/admin_monitor.php'), 'Data IDP Karyawan berhasil disesuaikan oleh Admin berdasarkan SOP Perubahan.', null, \core\output\notification::NOTIFY_SUCCESS);
+    // 🟢 OVERRIDE ADMIN: Simpan perubahan NIK Atasan Langsung ke Custom Profile Field Karyawan Pemilik IDP
+    if (!empty($data->atasan_anda)) {
+        $field_id = $DB->get_field('user_info_field', 'id', ['shortname' => 'atasan_langsung']);
+        if ($field_id) {
+            $profile_data = $DB->get_record('user_info_data', ['userid' => $idp->userid, 'fieldid' => $field_id]);
+            if ($profile_data) {
+                $profile_data->data = trim($data->atasan_anda);
+                $DB->update_record('user_info_data', $profile_data);
+            } else {
+                $new_profile = new stdClass();
+                $new_profile->userid = $idp->userid;
+                $new_profile->fieldid = $field_id;
+                $new_profile->data = trim($data->atasan_anda);
+                $DB->insert_record('user_info_data', $new_profile);
+            }
+        }
+    }
+
+    redirect(new moodle_url('/local/myidpebi/admin_monitor.php'), 'Data IDP Karyawan dan Atasan Langsung berhasil disesuaikan oleh Admin.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
-// Masukkan data lama IDP ke dalam form agar langsung tampil saat halaman dibuka
+// 🟢 SINKRONISASI UTAMA: Ambil NIK Atasan Langsung dari Karyawan Pemilik IDP (bukan Admin yang login)
+$sql_atasan = "SELECT d.data 
+               FROM {user_info_data} d
+               JOIN {user_info_field} f ON d.fieldid = f.id
+               WHERE d.userid = ? AND f.shortname = ?";
+$karyawan_atasan_nik = $DB->get_field_sql($sql_atasan, [$idp->userid, 'atasan_langsung']);
+
+if ($karyawan_atasan_nik) {
+    $idp->atasan_anda = trim($karyawan_atasan_nik);
+}
+
+// Ambil juga NIK Pembimbing (atasan_id) lama agar terisi otomatis di form admin
+$pembimbing_lama = $DB->get_record('user', ['id' => $idp->atasan_id], 'username');
+if ($pembimbing_lama) {
+    $idp->nik_atasan = $pembimbing_lama->username;
+}
+
+// 🟢 EKSEKUSI SATU KALI SAJA: Lemparkan data objek yang sudah matang ke form sebelum dirender
 $mform->set_data($idp);
 
 echo $OUTPUT->header();
 
-// Beri alert penanda warna kuning sebagai pengingat bahwa ini adalah aksi Override Admin
-echo '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> <strong>Perhatian Terkait Regulasi:</strong> Anda bertindak sebagai Administrator. Perubahan pada form ini ditujukan khusus untuk keperluan koreksi data resmi (seperti pergantian pembimbing mutasi) di tengah jalan.</div>';
+echo '<div class="alert alert-warning"><i class="fa fa-exclamation-triangle"></i> <strong>Perhatian Terkait Hak Otoritas Admin:</strong> Halaman ini digunakan khusus untuk melakukan koreksi darurat / data adjustment apabila terjadi kesalahan input atau rotasi jabatan pembimbing di lingkungan instansi.</div>';
 
 $mform->display();
-
 echo $OUTPUT->footer();

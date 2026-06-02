@@ -95,7 +95,7 @@ if ($mform->is_cancelled()) {
         $new_idp_id = $DB->insert_record('local_myidpebi', $idp);
         
         $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $new_idp_id]);
-        redirect($redirect_url, 'Program IDP berhasil dibuat, silahkan minta pembimbing anda untuk approval', null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect_url, 'Program IDP berhasil dibuat, silahkan minta atasan / pembimbing anda untuk approval', null, \core\output\notification::NOTIFY_SUCCESS);
     }
 }
 

@@ -181,7 +181,7 @@ echo '                </div>';
 echo '                <h6 class="mt-2 mb-1 font-weight-bold '.$class_step1.'">1. Perencanaan</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status == 0) {
-    echo '                    <span class="text-warning font-weight-bold">Buatlah aktivitas perencanaan :</span><br>Jika sudah Ok, minta persetujuan dari Pembimbing.';
+    echo '                    <span class="text-warning font-weight-bold">Buatlah aktivitas perencanaan :</span><br>Jika sudah Ok, minta persetujuan dari Atasan.';
 } else {
     echo '                    Rencana IDP anda telah disetujui.';
 }
@@ -232,7 +232,7 @@ echo "<h4 class='text-primary mb-3'><i class='fa fa-folder-open'></i> {$idp->nam
 echo '<div class="row">';
 echo '  <div class="col-md-12">';
 echo '      <div class="mb-2"><strong>Status:</strong><br>' . $status_info->badge . '</div>';
-echo '      <div class="mb-2"><strong>Pembimbing / Coach:</strong><br>' . ($idp->p_nik ?: '-') . ' - ' . $idp->p_fname . ' ' . $idp->p_lname . '</div>';
+echo '      <div class="mb-2"><strong>Atasan Langsung :</strong><br>' . ($idp->p_nik ?: '-') . ' - ' . $idp->p_fname . ' ' . $idp->p_lname . '</div>';
 echo '      <div class="mb-2"><strong>Atasan Langsung (Sistem):</strong><br>' . ($idp->al_nik ?: '-') . ' - ' . $idp->al_fname . ' ' . $idp->al_lname . '</div>';
 echo '      <div class="mb-2"><strong>Periode Program:</strong><br>' . userdate($idp->mulai_date, '%d %b %Y') . ' s/d ' . userdate($idp->akhir_date, '%d %b %Y') . '</div>';
 echo '      <div class="mb-2"><strong>Total Perencanaan JP</strong><br>' . $total_jp_rencana. '</div>';
@@ -288,7 +288,13 @@ echo '</div>';
 echo '<p class="text-muted"><small>* Klik tombol pencil untuk melakukan perubahan aktifitas</small></p>';
 
 
-$activities = $DB->get_records('local_myidpebi_act', ['idp_id' => $idp_id], 'deleted ASC, id ASC');
+$sql_act = "SELECT a.*, m.learning_activity as nama_learning_activity, m.bentuk_evidence 
+            FROM {local_myidpebi_act} a
+            LEFT JOIN {local_myidpebi_learning_activity} m ON a.learning_activity = m.id
+            WHERE a.idp_id = :idp_id 
+            ORDER BY a.deleted ASC, a.id ASC"; // Menjamin data aktif (0) di atas, data terhapus (1) mengumpul di bawah
+
+$activities = $DB->get_records_sql($sql_act, ['idp_id' => $idp_id]);
 
 echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
@@ -299,7 +305,7 @@ echo '  <thead class="table-light text-center align-middle">
                 <th colspan="2">Tuntutan Posisi Sekarang</th>
                 <th colspan="2">Tuntutan Posisi Berikutnya</th>
                 <th colspan="2">Tuntutan Perubahan Lingkungan</th>
-                <th rowspan="2">Jenis Kegiatan</th>
+                <th rowspan="2">Aktivitas Pembelajaran</th>
                 <th rowspan="2">Detail Aktivitas</th>
                 <th colspan="2">Jam Pelajaran (JP)</th>
                 <th rowspan="2">Periode Waktu</th>
@@ -358,7 +364,7 @@ if ($activities) {
         // echo "  <td {$text_style}>{$a->area_pengembangan}</td>";
 
 
-        echo "  <td {$text_style} class='text-center'>{$a->jenis_kegiatan}</td>";
+        echo "  <td {$text_style} class='text-center'>{$a->nama_learning_activity}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_perencanaan}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_realisasi}</td>";
