@@ -13,6 +13,16 @@
                 <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="approved_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang menyetujui program"/>
                 <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
+                <FIELD NAME="verified_ldc_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas (dari LDC/HR)"/>
+
+                <FIELD NAME="tuntutan_sekarang_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Performance)"/>
+                <FIELD NAME="tuntutan_sekarang_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Kompetensi)"/>
+                <FIELD NAME="tuntutan_berikutnya_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Performance)"/>
+                <FIELD NAME="tuntutan_berikutnya_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Kompetensi)"/>
+                <FIELD NAME="tuntutan_lingkungan" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Karena Perubahan Lingkungan"/>
+                <FIELD NAME="area_pengembangan_ditingkatkan" TYPE="text"  NOTNULL="false"  COMMENT="Area pengembangan yang perlu ditingkatkan"/>
+                <FIELD NAME="area_pengembangan_diharapkan" TYPE="text"  NOTNULL="false"  COMMENT="Area pengembangan yang perlu diharapkan"/>
+                
 
                 <FIELD NAME="skor_efektivitas" TYPE="number" LENGTH="5" DECIMALS="2" NOTNULL="false" DEFAULT="0.00" COMMENT="Hasil penilaian self assesment atas efektivitas IDP"/>
                 <FIELD NAME="kesimpulan_karyawan" TYPE="text" NOTNULL="false" COMMENT="Catatan evaluasi mandiri oleh karyawan"/>
@@ -29,14 +39,7 @@
             <FIELDS>
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="idp_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
-                <FIELD NAME="aspek" TYPE="char" LENGTH="20" NOTNULL="false"/>
-                <FIELD NAME="nilai_ipp" TYPE="char" LENGTH="255" DEFAULT="0" NOTNULL="true"/>
-                <FIELD NAME="tuntutan_sekarang_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Performance)"/>
-                <FIELD NAME="tuntutan_sekarang_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Kompetensi)"/>
-                <FIELD NAME="tuntutan_berikutnya_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Performance)"/>
-                <FIELD NAME="tuntutan_berikutnya_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Kompetensi)"/>
-                <FIELD NAME="tuntutan_lingkungan_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Performance)"/>
-                <FIELD NAME="tuntutan_lingkungan_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Lingkungan (Kompetensi)"/>
+                
                 <FIELD NAME="learning_activity" TYPE="char" LENGTH="100" NOTNULL="true"/>
                 <FIELD NAME="nama_activity" TYPE="char" LENGTH="255" NOTNULL="true"/>
                 <FIELD NAME="jumlah_jp_perencanaan" TYPE="int" LENGTH="10" NOTNULL="true"/>

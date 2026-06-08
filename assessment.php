@@ -23,6 +23,26 @@ if ($idp->status != 1) {
     throw new moodle_exception('nomodify', 'debug', '', 'Evaluasi hanya dapat diisi pada program IDP yang sedang berjalan.');
 }
 
+// 5.  WAJIB KLIK DARI TOMBOL VIEW_DETAILS.PHP
+// Mengecek apakah form sedang dalam proses menyimpan data (HTTP POST)
+$is_submitting = ($_SERVER['REQUEST_METHOD'] === 'POST');
+
+if (!$is_submitting) {
+    // 🔍 Pengecekan Referer HANYA dilakukan saat pertama kali halaman dibuka (HTTP GET)
+    $referer = get_local_referer(false); 
+    
+    if (empty($referer) || strpos($referer, 'view_details.php') === false || strpos($referer, 'id=' . $idp_id) === false) {
+        // Alirkan kembali ke halaman detail dengan pesan peringatan keras
+        $redirect_back = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
+        redirect(
+            $redirect_back, 
+            'Akses Ditolak! Anda wajib mengakses halaman ini melalui tombol "Isi Evaluasi Efektivitas IDP" resmi yang tersedia.', 
+            null, 
+            \core\output\notification::NOTIFY_ERROR
+        );
+    }
+}
+
 // Inisialisasi URL Halaman dan Pengaturan Page Moodle
 $url = new moodle_url('/local/myidpebi/assessment.php', ['id' => $idp_id]);
 $PAGE->set_url($url);

@@ -25,13 +25,13 @@ $PAGE->set_url($url);
 $PAGE->set_context(context_system::instance());
 $PAGE->set_title($act_id ? ($is_clone ? 'Duplikat Aktivitas' : 'Edit Aktivitas') : 'Tambah Aktivitas');
 
-// 5. Breadcrumb Navigasi
+// Breadcrumb Navigasi
 $PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'));
 // Tambahkan link dinamis ke halaman View Details IDP yang sedang aktif saat ini
 $view_details_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
 $PAGE->navbar->add('Detail IDP (' . s($idp->nama_idp) . ')', $view_details_url);
 
-// 🟢 SEBELUM LINE 29: Matikan deprecated strict notice PHP 8 secara sementara
+// Matikan deprecated strict notice PHP 8 secara sementara
 $old_error_level = error_reporting();
 error_reporting($old_error_level & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE);
 
@@ -41,7 +41,7 @@ $mform = new \local_myidpebi\forms\act_form($url->out(false), [
     'act_id' => $act_id
 ]);
 
-// 🟢 SETELAH LINE 32: Kembalikan level error asli Moodle setelah form selesai dimuat
+// Kembalikan level error asli Moodle setelah form selesai dimuat
 error_reporting($old_error_level);
 
 if ($act_id) {
@@ -56,15 +56,8 @@ if ($act_id) {
     }
     
     $form_data->idp_id                          = $activity->idp_id;
-    $form_data->aspek                           = $activity->aspek;
-    $form_data->nilai_ipp                       = $activity->nilai_ipp;
+    
     // FIXED: Menyesuaikan properti DB asal ke field form split (_performance & _kompetensi)
-    $form_data->tuntutan_sekarang_performance   = $activity->tuntutan_sekarang_performance ?? '';
-    $form_data->tuntutan_sekarang_kompetensi    = $activity->tuntutan_sekarang_kompetensi ?? '';
-    $form_data->tuntutan_berikutnya_performance = $activity->tuntutan_berikutnya_performance ?? '';
-    $form_data->tuntutan_berikutnya_kompetensi  = $activity->tuntutan_berikutnya_kompetensi ?? '';
-    $form_data->tuntutan_lingkungan_performance = $activity->tuntutan_lingkungan_performance ?? '';
-    $form_data->tuntutan_lingkungan_kompetensi  = $activity->tuntutan_lingkungan_kompetensi ?? '';
 
     $form_data->learning_activity            = (int)$activity->learning_activity;
     $form_data->nama_activity                   = $activity->nama_activity;
@@ -106,17 +99,8 @@ if ($mform->is_cancelled()) {
     $act = new stdClass();
     $act->idp_id = $idp_id;
     
-    // Logika Rencana (Selalu tangkap data form untuk record baru/duplikat maupun edit)
-    $act->aspek               = $data->aspek;
-    $act->nilai_ipp           = $data->nilai_ipp;
+ 
     // FIXED: Mengambil data pecahan form untuk disimpan ke kolom DB masing-masing
-    $act->tuntutan_sekarang_performance   = $data->tuntutan_sekarang_performance ?? '-';
-    $act->tuntutan_sekarang_kompetensi    = $data->tuntutan_sekarang_kompetensi ?? '-';
-    $act->tuntutan_berikutnya_performance = $data->tuntutan_berikutnya_performance ?? '-';
-    $act->tuntutan_berikutnya_kompetensi  = $data->tuntutan_berikutnya_kompetensi ?? '-';
-    $act->tuntutan_lingkungan_performance = $data->tuntutan_lingkungan_performance ?? '-';
-    $act->tuntutan_lingkungan_kompetensi  = $data->tuntutan_lingkungan_kompetensi ?? '-';
-
     $act->learning_activity = (int)$data->learning_activity;
     $act->nama_activity       = $data->nama_activity;
     $act->waktu_teks          = $data->waktu_teks;

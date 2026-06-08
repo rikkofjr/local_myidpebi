@@ -69,11 +69,19 @@ if ($mform->is_cancelled()) {
     $idp->userid     = $USER->id;
     $idp->mulai_date = $fromform->mulai_date;
     $idp->akhir_date = $fromform->akhir_date;
+    $idp->tuntutan_sekarang_performance = $fromform->tuntutan_sekarang_performance;
+    $idp->tuntutan_sekarang_kompetensi = $fromform->tuntutan_sekarang_kompetensi;
+    $idp->tuntutan_berikutnya_performance = $fromform->tuntutan_berikutnya_performance;
+    $idp->tuntutan_berikutnya_kompetensi = $fromform->tuntutan_berikutnya_kompetensi;
+    $idp->tuntutan_lingkungan = $fromform->tuntutan_lingkungan;
+    $idp->area_pengembangan_ditingkatkan = $fromform->area_pengembangan_ditingkatkan;
+    $idp->area_pengembangan_diharapkan = $fromform->area_pengembangan_diharapkan;
     
-    // Cari 'id' angka user Moodle berdasarkan 'nik_atasan' yang dikirim dari form
+    // 🟢 PERBAIKAN UNIVERSAL: Menentukan ID Atasan menggunakan konfigurasi dinamis dari Admin UI
     $atasan_id = 0;
     if (!empty($fromform->nik_atasan)) {
-        $atasan_user = $DB->get_record('user', ['username' => trim($fromform->nik_atasan), 'deleted' => 0]);
+        // Memanggil helper universal dari lib.php (Bisa membaca NIK/Email/ID secara otomatis)
+        $atasan_user = local_myidpebi_get_user_by_config($fromform->nik_atasan);
         if ($atasan_user) {
             $atasan_id = (int)$atasan_user->id;
         }

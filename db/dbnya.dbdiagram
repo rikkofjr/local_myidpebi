@@ -1,0 +1,33 @@
+{
+  "version": "2.0.0",
+  "darkMode": false,
+  "gridEnabling": false,
+  "currentViewName": null,
+  "defaultView": {
+    "detailLevel": "All",
+    "tablePositions": [
+      {
+        "name": "local_myidpebi",
+        "schemaName": "public",
+        "x": 396.3699518019153,
+        "y": -200.62963079637098
+      },
+      {
+        "name": "local_myidpebi_act",
+        "schemaName": "public",
+        "x": 988.83984375,
+        "y": 12
+      },
+      {
+        "name": "local_myidpebi_learning_activity",
+        "schemaName": "public",
+        "x": 12,
+        "y": 12
+      }
+    ],
+    "tableGroupCollapseStates": [],
+    "stickyNoteLayouts": [],
+    "referencePaths": []
+  },
+  "views": {}
+}

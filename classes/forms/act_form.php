@@ -17,43 +17,13 @@ class act_form extends \moodleform {
         $mform->setType('id', PARAM_INT);
 
         // ==========================================
-        // GROUP FORM 1: ANALISIS KOMPETENSI & RENCANA
+        // GROUP FORM : LANGKAH 2: PENYUSUNAN RENCANA PENGEMBANGAN INDIVIDU
         // ==========================================
-        $mform->addElement('header', 'group_form_1', 'Group Form 1: Analisis Kompetensi & Rencana');
-        
-        $mform->addElement('text', 'aspek', 'Aspek');
-        $mform->setType('aspek', PARAM_TEXT);
-        
-        $mform->addElement('text', 'nilai_ipp', 'Nilai');
-        $mform->setType('nilai_ipp', PARAM_TEXT);
-        
-        $mform->addElement('textarea', 'tuntutan_sekarang_performance', 'Tuntutan pada posisi sekarang (Performance)', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan prioritas/fokus area pengembangan (berdasarkan indikator kinerja, kompetensi, leadership, atau value) yang perlu ditingkatkan pada posisi saat ini']);
-        $mform->setType('tuntutan_sekarang_performance', PARAM_RAW);
+        $mform->addElement('header', 'group_form_1', 'LANGKAH 2: PENYUSUNAN RENCANA PENGEMBANGAN INDIVIDU');
 
-        $mform->addElement('textarea', 'tuntutan_sekarang_kompetensi', 'Tuntutan pada posisi sekarang (Kompetensi)', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan prioritas/fokus area pengembangan (berdasarkan indikator kinerja, kompetensi, leadership, atau value) yang perlu ditingkatkan pada posisi saat ini']);
-        $mform->setType('tuntutan_sekarang_performance_kompetensi', PARAM_RAW);
-
-        $mform->addElement('html', '<hr />');
         
-        $mform->addElement('textarea', 'tuntutan_berikutnya_performance', 'Tuntutan pada posisi berikutnya (Performance)', ['rows' => 3, 'cols' => 50]);
-        $mform->setType('tuntutan_berikutnya_performance', PARAM_RAW);
-
-        $mform->addElement('textarea', 'tuntutan_berikutnya_kompetensi', 'Tuntutan pada posisi berikutnya (Kompetensi)', ['rows' => 3, 'cols' => 50]);
-        $mform->setType('tuntutan_berikutnya_kompetensi', PARAM_RAW);
-
-        $mform->addElement('html', '<hr />');
-        
-        $mform->addElement('textarea', 'tuntutan_lingkungan_performance', 'Tuntutan karena perubahan lingkungan (Performance)', ['rows' => 3, 'cols' => 50]);
-        $mform->setType('tuntutan_lingkungan_performance', PARAM_RAW);
-        
-        $mform->addElement('textarea', 'tuntutan_lingkungan_kompetensi', 'Tuntutan karena perubahan lingkungan (Kompetensi)', ['rows' => 3, 'cols' => 50]);
-        $mform->setType('tuntutan_lingkungan_kompetensi', PARAM_RAW);
-
-        $mform->addElement('html', '<hr />');
-        
-
         // Mengambil master data dari tabel baru local_myidpebi_learning_activity
-        $master_kegiatan = $DB->get_records('local_myidpebi_learning_activity', null, 'bentuk_cdp ASC', 'id, learning_activity, tipe_aktivitas_cdp');
+        $master_kegiatan = $DB->get_records('local_myidpebi_learning_activity', null, 'tipe_aktivitas_cdp ASC', 'id, learning_activity, tipe_aktivitas_cdp');
         
         $jenis_opsi = ['' => '-- Pilih Jenis Kegiatan --'];
         if ($master_kegiatan) {
@@ -63,24 +33,29 @@ class act_form extends \moodleform {
         }
         $mform->addElement('select', 'learning_activity', 'Aktivitas pengembangan yang akan dilakukan', $jenis_opsi);
         $mform->setType('learning_activity', PARAM_INT);
+        $mform->addRule('learning_activity', 'Harus Diisi', 'required', null, 'client');
+        
 
         $mform->addElement('text', 'nama_activity', 'Detail Kegiatan');
         $mform->setType('nama_activity', PARAM_TEXT);
+        $mform->addRule('nama_activity', 'Harus Diisi', 'required', null, 'client');
+        
 
-        $mform->addElement('text', 'jumlah_jp_perencanaan', 'Jam Pelajaran (JP) Perencanaan', ['placeholder' => 'Masukkan angka JP...']);
+        $mform->addElement('text', 'jumlah_jp_perencanaan', 'Jumlah Jam Pembelajaran/JP (Rencana)', ['placeholder' => 'Masukkan angka JP...']);
         $mform->setType('jumlah_jp_perencanaan', PARAM_INT);
         $mform->addHelpButton('jumlah_jp_perencanaan', 'help_jp', 'local_myidpebi'); // Opsional jika ingin ada tombol tanya info
-        $mform->addRule('jumlah_jp_perencanaan', 'Kolom ini hanya boleh diisi oleh angka!', 'numeric', null, 'client');
+        $mform->addRule('jumlah_jp_perencanaan', 'Wajib diisi !', 'required', null, 'client');
+        $mform->addRule('jumlah_jp_perencanaan', 'hanya boleh diisi oleh angka!', 'numeric', null, 'client');
 
-        $mform->addElement('text', 'waktu_teks', 'Periode');
+        $mform->addElement('text', 'waktu_teks', 'Periode Pelaksanaan (Rencana)');
         $mform->setType('waktu_teks', PARAM_TEXT);
         
         // ==========================================
         // GROUP FORM 2: REALISASI & EVIDENCE
         // ==========================================
-        $mform->addElement('header', 'group_form_2', 'Group Form 2: Realisasi Pengembangan (Diisi Setelah Berjalan)');
+        $mform->addElement('header', 'group_form_2', 'LANGKAH 2: REALISASI PENGEMBANGAN INDIVIDU (Diisi secara periodik setelah terlaksana)');
         
-        $mform->addElement('text', 'jumlah_jp_realisasi', 'Jam Pelajaran (JP) Realisasi', ['placeholder' => 'Masukkan angka JP...']);
+        $mform->addElement('text', 'jumlah_jp_realisasi', 'Jam Pembelajaran/JP (Realisasi)', ['placeholder' => 'Masukkan angka JP...']);
         $mform->setType('jumlah_jp_realisasi', PARAM_INT);
         $mform->addHelpButton('jumlah_jp_realisasi', 'help_jp', 'local_myidpebi'); // Opsional jika ingin ada tombol tanya info
         $mform->addRule('jumlah_jp_realisasi', 'Kolom ini hanya boleh diisi oleh angka!', 'numeric', null, 'client');
@@ -114,14 +89,41 @@ class act_form extends \moodleform {
             }
         } else if ($status == 1) {
             if ($act_id && !$is_clone) {
-                // Jika EDIT data lama: Kunci rencana (Group Form 1)
-                $mform->freeze([
-                    'aspek', 'nilai_ipp', 
-                    'tuntutan_sekarang_performance', 'tuntutan_sekarang_kompetensi', 
-                    'tuntutan_berikutnya_performance', 'tuntutan_berikutnya_kompetensi', 
-                    'tuntutan_lingkungan_performance', 'tuntutan_lingkungan_kompetensi', 
-                    'learning_activity', 'nama_activity', 'waktu_teks', 'jumlah_jp_perencanaan'
-                ]);
+                // 🟢 JIKA EDIT DATA LAMA DI STATUS berjalan: Kunci Rencana tanpa menggunakan freeze()
+                
+                // 1. Kunci input text 'nama_activity', 'waktu_teks', dan 'jumlah_jp_perencanaan' menggunakan readonly
+                // Atribut ini mengunci inputan, tapi datanya TETAP TERKIRIM saat disave sehingga tidak memicu error required
+                if ($mform->elementExists('nama_activity')) {
+                    $mform->getElement('nama_activity')->updateAttributes(['
+                    readonly' => 'readonly',
+                    'style' => 'background-color: #e9ecef;']
+                    
+                    );
+                }
+                if ($mform->elementExists('waktu_teks')) {
+                    $mform->getElement('waktu_teks')->updateAttributes([
+                        'readonly' => 'readonly',
+                        'style' => 'background-color: #e9ecef;']
+                        
+                        );
+                }
+                if ($mform->elementExists('jumlah_jp_perencanaan')) {
+                    $mform->getElement('jumlah_jp_perencanaan')->updateAttributes([
+                        'readonly' => 'readonly', 
+                        'style' => 'background-color: #e9ecef;']
+                        
+                        );
+                }
+
+                // 2. Kunci input dropdown 'learning_activity' (atau 'learning_activity_id') menggunakan CSS pointer-events
+                // Dropdown tidak mendukung readonly, jadi kita matikan interaksi klik-nya agar tidak bisa diganti karyawan
+                if ($mform->elementExists('learning_activity')) {
+                    $mform->getElement('learning_activity')->updateAttributes([
+                        'style' => 'background-color: #e9ecef; pointer-events: none; touch-action: none;',
+                        'tabindex' => '-1'
+                    ]);
+                }
+                
             } else {
                 // Jika TAMBAH BARU di status 1: Buka rencana, kunci realisasi
                 $mform->freeze(['jumlah_jp_realisasi']);
@@ -131,7 +133,7 @@ class act_form extends \moodleform {
             }
         }
 
-        $mform->addElement('submit', 'submitbutton', 'Simpan'); // Baris asli Anda selanjutnya (Line 105)
+        $mform->addElement('submit', 'submitbutton', 'Simpan'); //simpan 
     }
 
     /**

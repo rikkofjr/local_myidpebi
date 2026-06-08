@@ -1,0 +1,60 @@
+// Database: Moodle IDP EBI Complete Table with Supervisor Audit Trail
+// Version: 20260518
+
+Table local_myidpebi {
+  id int [pk, increment, note: 'Primary Key']
+  userid int [not null]
+  atasan_id int [not null, note: 'ID User Moodle yang ditunjuk sebagai Pembimbing']
+  nama_idp varchar(255) [not null]
+  mulai_date int [not null]
+  akhir_date int [not null]
+  status int [not null, default: 0]
+  timecreated int [not null]
+  approved_by int [default: 0, note: 'ID User yang menyetujui program']
+  verified_by int [default: 0, note: 'ID User yang memverifikasi tuntas']
+  verified_ldc_by int [default: 0, note: 'ID User yang memverifikasi tuntas (dari LDC/HR)']
+  tuntutan_sekarang_performance text [note: 'Tuntutan Sekarang (Performance)']
+  tuntutan_sekarang_kompetensi text [note: 'Tuntutan Sekarang (Kompetensi)']
+  tuntutan_berikutnya_performance text [note: 'Tuntutan Berikutnya (Performance)']
+  tuntutan_berikutnya_kompetensi text [note: 'Tuntutan Berikutnya (Kompetensi)']
+  tuntutan_lingkungan text [note: 'Tuntutan Karena Perubahan Lingkungan']
+  area_pengembangan_ditingkatkan text [note: 'Area pengembangan yang perlu ditingkatkan']
+  area_pengembangan_diharapkan text [note: 'Area pengembangan yang perlu diharapkan']
+  skor_efektivitas decimal(5,2) [default: 0.00, note: 'Hasil penilaian self assesment atas efektivitas IDP']
+  kesimpulan_karyawan text [note: 'Catatan evaluasi mandiri oleh karyawan']
+  skor_atasan decimal(5,2) [default: 0.00, note: 'Hasil penilaian atasan atas efektivitas IDP']
+  kesimpulan_atasan text [note: 'Catatan evaluasi oleh atasan']
+  kesimpulan_hcm text [note: 'Catatan evaluasi oleh LDC/Manager role LMS']
+
+  Note: 'Data Utama IDP'
+}
+
+Table local_myidpebi_act {
+  id int [pk, increment, note: 'Primary Key']
+  idp_id int [not null]
+  learning_activity varchar(100) [not null]
+  nama_activity varchar(255) [not null]
+  jumlah_jp_perencanaan int [not null]
+  waktu_teks varchar(255) [not null]
+  jumlah_jp_realisasi int [not null]
+  evidence_fileid int [default: 0]
+  deleted int [not null, default: 0, note: '0=Aktif, 1=Dibatalkan']
+
+  Note: 'Rincian Aktivitas IDP'
+}
+
+Table local_myidpebi_learning_activity {
+  id int [pk, increment, note: 'Primary Key']
+  bentuk_cdp varchar(255) [note: 'Bentuk CDP yang digunakan (Jalur Pendidikan, Pelatihan (Klasikal), Pelatihan (non klasikal))']
+  tipe_aktivitas_cdp varchar(255) [note: 'Tipe Aktivitas (Formal/work based learning/self directed learning/others)']
+  learning_activity varchar(255) [not null, note: 'Nama opsi jenis kegiatan pengembangan']
+  jp_min int [not null, default: 0, note: 'Batas minimum input JP']
+  jp_max int [not null, default: 0, note: 'Batas maksimum input JP']
+  bentuk_evidence text [note: 'Bentuk evidence yang digunakan untuk kegiatan tersebut']
+  timecreated int [not null]
+
+  Note: 'Master aturan batasan JP Jenis Kegiatan IDP'
+}
+
+// Relasi Antar Tabel (Foreign Keys)
+Ref: local_myidpebi_act.idp_id > local_myidpebi.id [delete: cascade, update: cascade]

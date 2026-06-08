@@ -13,31 +13,42 @@ if (!$idp_id) {
     throw new moodle_exception('missingparameter', 'debug', '', 'ID');
 }
 
-// 2. Ambil data IDP, info Pembimbing (atasan_id), serta Atasan Langsung dari Custom Profile Field
+//Ambil Profile Field Atasan
+$shortname_config = get_config('local_myidpebi', 'profile_field_atasan');
+$profile_field_shortname = !empty($shortname_config) ? $shortname_config : 'atasan_langsung';
+
+// 🟢 TAMBAHKAN BARIS INI: Ambil target identitas (username atau email atau lainnya)
+$identity_config = get_config('local_myidpebi', 'identity_field_atasan');
+$field_target = !empty($identity_config) ? $identity_config : 'username';
+
+// 2. Ambil data IDP dengan LEFT JOIN Atasan Langsung yang dinamis
 $idp = $DB->get_record_sql("SELECT i.*, 
                                    p.firstname as p_fname, p.lastname as p_lname, p.username as p_nik,
                                    k.firstname as k_fname, k.lastname as k_lname,
-                                   al.id as atasan_langsung_id, al.firstname as al_fname, al.lastname as al_lname, al.username as al_nik,
+                                   al.id as atasan_langsung_id, al.firstname as al_fname, al.lastname as al_lname, al.username as al_nik, al.email as al_email,
                                    app.firstname as app_fname, app.lastname as app_lname, app.username as app_nik,
                                    vif.firstname as vif_fname, vif.lastname as vif_lname, vif.username as vif_nik
                              FROM {local_myidpebi} i 
                              JOIN {user} k ON i.userid = k.id
                              JOIN {user} p ON i.atasan_id = p.id 
-                             /* Join custom profile field karyawan untuk mencari NIK Atasan Langsung */
-                            --  LEFT JOIN {user_info_data} uid ON uid.userid = k.id
-                            --  LEFT JOIN {user_info_field} uif ON uid.fieldid = uif.id AND uif.shortname = 'atasan_langsung'
-
-                             LEFT JOIN {user_info_field} uif ON uif.shortname = 'atasan_langsung'
-                             LEFT JOIN {user_info_data} uid ON uid.userid = k.id AND uid.fieldid = uif.id
-                             /* Map NIK tersebut ke user Moodle asli */
-                             LEFT JOIN {user} al ON al.username = uid.data
+                             JOIN {user_info_field} uif ON uif.shortname = :profile_field_atasan
+                             JOIN {user_info_data} uid ON uid.fieldid = uif.id AND uid.userid = k.id
+                             
+                             -- 🟢 PERBAIKAN DI SINI: al.username diganti menggunakan variabel $field_target
+                             LEFT JOIN {user} al ON al.{$field_target} = uid.data
+                             
                              LEFT JOIN {user} app ON i.approved_by = app.id
                              LEFT JOIN {user} vif ON i.verified_by = vif.id
-                             WHERE i.id = ?", [$idp_id]);
+                             WHERE i.id = :idp_id", 
+                             [
+                                 'idp_id' => $idp_id, 
+                                 'profile_field_atasan' => $profile_field_shortname
+                             ], 
+                             MUST_EXIST);
 
-// // =========================================================================
-// // SEMENTARA: MASUKKAN KODE DEBUG INI UNTUK MELIHAT ISI DATA ASLI DATABASE
-// // =========================================================================
+// =========================================================================
+// SEMENTARA: MASUKKAN KODE DEBUG INI UNTUK MELIHAT ISI DATA ASLI DATABASE
+// =========================================================================
 // echo "<div style='background:#fff; color:#000; padding:20px; z-index:9999; position:relative;'>";
 // echo "<h3>Hasil Pengambilan Data Objek IDP:</h3>";
 // echo "<pre>";
@@ -245,7 +256,40 @@ if ($idp->status < 2) {
 echo '      </div>';
 
 
-//wait
+//table analisa kompetensi
+
+echo '<div class="table-responsive">';
+echo '<table class="table table-bordered table-hover shadow-sm">';
+echo '  <thead class="table-light text-center align-middle">
+            <tr>
+                <th colspan="2">Tuntutan Pada Posisi Saat Ini</th>
+                <th colspan="2">Tuntutan Pada Posisi Berikutnya </th>
+                <th rowspan="2">Tuntutan Karena Perubahan Lingkungan</th>
+                <th rowspan="2">Area Pengembangan</th>
+                <th rowspan="2">Hasil Pengembangan Yang Dituju</th>
+            </tr>
+            <tr>
+                <th> Perfomance</th>
+                <th> Kompetensi</th>
+                <th> Perfomance</th>
+                <th> Kompetensi</th>
+            </tr>
+        </thead>
+        <tbody><tr>';
+
+echo '<td>' . $idp->tuntutan_sekarang_performance . '</td>';
+echo '<td>' . $idp->tuntutan_sekarang_kompetensi . '</td>';
+echo '<td>' . $idp->tuntutan_berikutnya_performance . '</td>';
+echo '<td>' . $idp->tuntutan_berikutnya_kompetensi . '</td>';
+echo '<td>' . $idp->tuntutan_lingkungan . '</td>';
+echo '<td>' . $idp->area_pengembangan_ditingkatkan . '</td>';
+echo '<td>' . $idp->area_pengembangan_diharapkan . '</td>';
+
+echo '</tr></tbody>';
+echo '</table>';
+echo '</div>';
+
+
 // Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
 if ($idp->status > 0) {
     echo '<div class="mt-3 p-2 bg-light border rounded small">';
@@ -267,19 +311,12 @@ if ($idp->status > 0) {
 echo '</div>';
 
 
-
 // --- DAFTAR AKTIVITAS ---
 echo '<div class="d-flex justify-content-between align-items-center mt-5 mb-3">';
 echo '  <h4 class="m-0">Rincian Aktivitas</h4>';
 
 if ($idp->status < 2 && $USER->id == $idp->userid) {
-    // $add_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
-    // // Jika status = 1 (Proses), beri tanda act_id = -1 ke URL untuk memberi tahu halaman edit_activity agar membuka gerbang JP
-    // if ($idp->status == 1) {
-    //     $add_url->param('act_id', -1);
-    // }
-    // echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
-    
+
     //gunakan dibawah ini
     $add_url = new moodle_url('/local/myidpebi/edit_activity.php', ['idp_id' => $idp_id]);
     echo '<a href="'.$add_url.'" class="btn btn-primary"><i class="fa fa-plus"></i> Tambah Aktivitas</a>';
@@ -300,25 +337,17 @@ echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
 echo '  <thead class="table-light text-center align-middle">
             <tr>
-                <th rowspan="2">Aspek</th>
-                <th rowspan="2">Nilai</th>
-                <th colspan="2">Tuntutan Posisi Sekarang</th>
-                <th colspan="2">Tuntutan Posisi Berikutnya</th>
-                <th colspan="2">Tuntutan Perubahan Lingkungan</th>
-                <th rowspan="2">Aktivitas Pembelajaran</th>
-                <th rowspan="2">Detail Aktivitas</th>
-                <th colspan="2">Jam Pelajaran (JP)</th>
-                <th rowspan="2">Periode Waktu</th>
-                <th rowspan="2">Evidence</th>
-                <th rowspan="2" width="100">Aksi</th>
+                <th colspan="3">Rencana Pengembangan</th>
+                <th rowspan="2" colspan="2">Jam Pelajaran (JP)</th>
+                <th rowspan="3">Evidence</th>
+                <th rowspan="3">Aksi</th>
             </tr>
             <tr>
-                <th>Performance</th>
-                <th>Kompetensi</th>
-                <th>Performance</th>
-                <th>Kompetensi</th>
-                <th>Performance</th>
-                <th>Kompetensi</th>
+                <th rowspan="2">Aktivitas Pembelajaran</th>
+                <th rowspan="2">Detail Aktivitas</th>
+                <th rowspan="2">Periode</th>
+            </tr>
+            <tr>
                 <th>Rencana</th>
                 <th>Realisasi</th>
             </tr>
@@ -343,32 +372,18 @@ if ($activities) {
         }
 
         echo "<tr class='{$row_class}'>";
-        echo "  <td {$text_style}>{$a->aspek}</td>";
-        echo "  <td {$text_style}>{$a->nilai_ipp}</td>";
 
         // =========================================================================
         // KONDISIONAL KOTAK TEKS PANJANG (DIKUNCI DENGAN SCROLLBOX INTERNAL AGAR TIDAK MELAR)
         // =========================================================================
         $textarea_box_style = 'style="max-height: 95px; overflow-y: auto; font-size: 15px; line-height: 1.4; padding: 6px; background: rgba(0,0,0,0.03); border-radius: 4px; border: 1px solid #e9ecef; white-space: pre-wrap; min-width: 150px;"';
 
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang_performance) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_sekarang_kompetensi) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya_performance) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_berikutnya_kompetensi) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan_performance) . "</div></td>";
-        echo "  <td class='align-middle'><div {$textarea_box_style}>" . s($a->tuntutan_lingkungan_kompetensi) . "</div></td>";
-
-        // echo "  <td {$text_style}>{$a->tuntutan_sekarang}</td>";
-        // echo "  <td {$text_style}>{$a->tuntutan_berikutnya}</td>";
-        // echo "  <td {$text_style}>{$a->tuntutan_lingkungan}</td>";
-        // echo "  <td {$text_style}>{$a->area_pengembangan}</td>";
-
 
         echo "  <td {$text_style} class='text-center'>{$a->nama_learning_activity}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
+        echo "  <td {$text_style}>{$a->waktu_teks}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_perencanaan}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_realisasi}</td>";
-        echo "  <td {$text_style}>{$a->waktu_teks}</td>";
         echo "  <td class='text-center'>{$file_link}</td>";
         echo "  <td class='text-center'>";
         
@@ -427,7 +442,7 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '      <h5><i class="fa fa-exclamation-triangle"></i> Self Assement IDP</h5>';
     echo '      <p class="mb-0">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
     echo '  </div>';
-    echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white">';
+    echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white" onclick="return confirm(\'Apakah Anda yakin sudah mengecek ulang seluruh rincian aktivitas IDP Anda dan mengonsultasikannya dengan atasan?\');">';
     echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';
     echo '  </a>';
     echo '</div>';
@@ -455,7 +470,7 @@ if ($is_pembimbing || $is_atasan_langsung) {
         echo '    </div>';
         echo '</div>';
 
-    } else if ($idp->status == 1) {
+    } else if ($idp->status == 1 && $idp->skor_efektivitas>= 1 ) {
         // 🟢 PERBAIKAN: Ubah URL agar mengarah ke halaman form kuesioner assessment_atasan.php
         $verify_url = new moodle_url('/local/myidpebi/assessment_atasan.php', ['id' => $idp->id]);
         
