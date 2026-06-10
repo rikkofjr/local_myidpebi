@@ -59,7 +59,7 @@ if (!$is_submitting) {
         $redirect_back = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
         redirect(
             $redirect_back, 
-            'Akses Ditolak! anda harus mengakses melalui tombol "Isi Penilaian & Verifikasi" resmi yang tersedia.', 
+            'Pastikan anda mengakses halaman assesment dengan tombol "Isi Penilaian & Verifikasi" resmi yang tersedia.', 
             null, 
             \core\output\notification::NOTIFY_ERROR
         );

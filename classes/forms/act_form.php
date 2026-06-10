@@ -53,7 +53,7 @@ class act_form extends \moodleform {
         // ==========================================
         // GROUP FORM 2: REALISASI & EVIDENCE
         // ==========================================
-        $mform->addElement('header', 'group_form_2', 'LANGKAH 2: REALISASI PENGEMBANGAN INDIVIDU (Diisi secara periodik setelah terlaksana)');
+        $mform->addElement('header', 'group_form_2', 'LANGKAH 3: REALISASI PENGEMBANGAN INDIVIDU (Diisi secara periodik setelah terlaksana)');
         
         $mform->addElement('text', 'jumlah_jp_realisasi', 'Jam Pembelajaran/JP (Realisasi)', ['placeholder' => 'Masukkan angka JP...']);
         $mform->setType('jumlah_jp_realisasi', PARAM_INT);

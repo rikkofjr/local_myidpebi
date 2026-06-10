@@ -23,7 +23,7 @@ if ($idp->status != 1) {
     throw new moodle_exception('nomodify', 'debug', '', 'Evaluasi hanya dapat diisi pada program IDP yang sedang berjalan.');
 }
 
-// 5.  WAJIB KLIK DARI TOMBOL VIEW_DETAILS.PHP
+// 5.  WAJIB KLIK DARI TOMBOL self assesment/evaluasi di VIEW_DETAILS.PHP
 // Mengecek apakah form sedang dalam proses menyimpan data (HTTP POST)
 $is_submitting = ($_SERVER['REQUEST_METHOD'] === 'POST');
 
@@ -36,7 +36,7 @@ if (!$is_submitting) {
         $redirect_back = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
         redirect(
             $redirect_back, 
-            'Akses Ditolak! Anda wajib mengakses halaman ini melalui tombol "Isi Evaluasi Efektivitas IDP" resmi yang tersedia.', 
+            'Pastikan anda mengakses halaman self-assesment melalui tombol "Isi Evaluasi Efektivitas IDP" resmi yang tersedia.', 
             null, 
             \core\output\notification::NOTIFY_ERROR
         );

@@ -77,7 +77,7 @@ if ($mform->is_cancelled()) {
     $idp->area_pengembangan_ditingkatkan = $fromform->area_pengembangan_ditingkatkan;
     $idp->area_pengembangan_diharapkan = $fromform->area_pengembangan_diharapkan;
     
-    // 🟢 PERBAIKAN UNIVERSAL: Menentukan ID Atasan menggunakan konfigurasi dinamis dari Admin UI
+    // Menentukan ID Atasan menggunakan konfigurasi dinamis dari Admin UI
     $atasan_id = 0;
     if (!empty($fromform->nik_atasan)) {
         // Memanggil helper universal dari lib.php (Bisa membaca NIK/Email/ID secara otomatis)
@@ -86,14 +86,19 @@ if ($mform->is_cancelled()) {
             $atasan_id = (int)$atasan_user->id;
         }
     }
+    // isi atasannya
     $idp->atasan_id = $atasan_id;
 
-    if ($edit_idp_id) {
+    // Deteksi ID lama secara akurat dari data internal Form yang disubmit
+    // Prioritaskan mengambil dari $fromform->id terlebih dahulu
+    $actual_idp_id = !empty($fromform->id) ? (int)$fromform->id : (int)$edit_idp_id;
+
+    if ($actual_idp_id > 0) {
         // --- PROSES UPDATE ---
-        $idp->id = $edit_idp_id;
+        $idp->id = $actual_idp_id;
         $DB->update_record('local_myidpebi', $idp);
         
-        $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $edit_idp_id]);
+        $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $actual_idp_id]);
         redirect($redirect_url, 'Program IDP berhasil diperbarui.', null, \core\output\notification::NOTIFY_SUCCESS);
     } else {
         // --- PROSES INSERT ---

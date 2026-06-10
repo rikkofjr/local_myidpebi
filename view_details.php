@@ -290,27 +290,6 @@ echo '</table>';
 echo '</div>';
 
 
-// Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
-if ($idp->status > 0) {
-    echo '<div class="mt-3 p-2 bg-light border rounded small">';
-    echo '  <h6 class="text-secondary font-weight-bold mb-1"><i class="fa fa-history"></i> Riwayat Persetujuan Sistem:</h6>';
-    
-    if (!empty($idp->approved_by)) {
-        $status1_info = local_myidpebi_get_status_info(1);
-        echo "  <div class='text-muted'>• Status [<strong>{$status1_info->text}</strong>] oleh: <strong>{$idp->app_nik} - {$idp->app_fname} {$idp->app_lname}</strong></div>";
-    }
-    
-    if (!empty($idp->verified_by)) {
-        $status2_info = local_myidpebi_get_status_info(2);
-        echo "  <div class='text-muted'>• Status [<strong>{$status2_info->text}</strong>] oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
-    }
-    
-    echo '</div>';
-}
-
-echo '</div>';
-
-
 // --- DAFTAR AKTIVITAS ---
 echo '<div class="d-flex justify-content-between align-items-center mt-5 mb-3">';
 echo '  <h4 class="m-0">Rincian Aktivitas</h4>';
@@ -423,7 +402,7 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '  <div class="card-header bg-success text-white"><strong><i class="fa fa-check-circle"></i> Hasil Self-Assessment</strong></div>';
     echo '  <div class="card-body">';
     echo '      <h4 class="card-title text-success">Skor Efektivitas IDP: ' . number_format($idp->skor_efektivitas, 2) . '</h4>';
-    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan Karyawan:</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
+    echo '      <p class="card-text"><strong>Kesimpulan IDP :</strong><br>' . s($idp->kesimpulan_karyawan) . '</p>';
     echo '  </div>';
     echo '</div>';
     // milik atasan
@@ -431,7 +410,7 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '  <div class="card-header bg-warning text-white"><strong><i class="fa fa-check-circle"></i> Hasil Penilaian Atasan</strong></div>';
     echo '  <div class="card-body">';
     echo '      <h4 class="card-title text-success">Penilaian Atasan: ' . number_format($idp->skor_atasan, 2) . '</h4>';
-    echo '      <p class="card-text"><strong>Testimoni / Kesimpulan atasan:</strong><br>' . s($idp->kesimpulan_atasan) . '</p>';
+    echo '      <p class="card-text"><strong>Kesimpulan IDP atasan:</strong><br>' . s($idp->kesimpulan_atasan) . '</p>';
     echo '  </div>';
     echo '</div>';
 } else if ($idp->status == 1 && $is_owner) {
@@ -491,5 +470,24 @@ if ($is_pembimbing || $is_atasan_langsung) {
 }
 echo '</div></div>'; // Penutup card Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
 
+// Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
+if ($idp->status > 0) {
+    echo '<div class="mt-3 p-2 bg-light border rounded small">';
+    echo '  <h6 class="text-secondary font-weight-bold mb-1"><i class="fa fa-history"></i> Riwayat Persetujuan Sistem:</h6>';
+    
+    if (!empty($idp->approved_by)) {
+        $status1_info = local_myidpebi_get_status_info(1);
+        echo "  <div class='text-muted'>• Status [<strong>{$status1_info->text}</strong>] oleh: <strong>{$idp->app_nik} - {$idp->app_fname} {$idp->app_lname}</strong></div>";
+    }
+    
+    if (!empty($idp->verified_by)) {
+        $status2_info = local_myidpebi_get_status_info(2);
+        echo "  <div class='text-muted'>• Status [<strong>{$status2_info->text}</strong>] oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
+    }
+    
+    echo '</div>';
+}
+
+echo '</div>';
 
 echo $OUTPUT->footer();
