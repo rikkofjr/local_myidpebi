@@ -37,7 +37,7 @@ echo $OUTPUT->header();
 $is_manager = has_capability('moodle/site:viewreports', context_system::instance());
 echo '<div class="d-flex justify-content-end mb-3">';
 if (is_siteadmin() || $is_manager) {
-    echo '<div class="mb-2 mr-2"><a href="admin_monitor.php" class="btn btn-danger btn-block">PANEL ADMINISTRATOR GLOBAL</a></div>';
+    echo '<div class="mb-2 mr-2"><a href="admin_panel.php" class="btn btn-danger btn-block">PANEL ADMINISTRATOR GLOBAL</a></div>';
 }
 // Tombol ke halaman terpisah add_idp.php
 echo '<div class="mb-2 mr-2"><a href="add_idp.php" class="btn btn-primary btn-block"><i class="fa fa-plus"></i> Buat Ajukan IDP Baru</a></div>';

@@ -57,16 +57,14 @@ if ($action == 'delete' && $id > 0 && confirm_sesskey()) {
     $DB->delete_records('local_myidpebi_learning_activity', ['id' => $id]);
     redirect($baseurl, 'Aktifitas Pembelajaran berhasil dihapus.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
+// --- NAVIGASI BREADCRUMB ---
+$PAGE->navbar->add('Admin Panel', new moodle_url('/local/myidpebi/admin_panel.php'));
+$PAGE->navbar->add('Learning Activity');
 
 // Memulai Output Tampilan
 echo $OUTPUT->header();
 
-// Tab navigasi utama dashboard admin Anda (UI Terintegrasi)
-echo '<ul class="nav nav-tabs mb-4">';
-echo '  <li class="nav-item"><a class="nav-link" href="' . new moodle_url('/local/myidpebi/admin_dashboard.php') . '"><i class="fa fa-pie-chart"></i> Ringkasan & Tren</a></li>';
-echo '  <li class="nav-item"><a class="nav-link" href="' . new moodle_url('/local/myidpebi/admin_monitor.php') . '"><i class="fa fa-desktop"></i> Monitoring Dokumen</a></li>';
-echo '  <li class="nav-item"><a class="nav-link active" href="' . $baseurl . '"><i class="fa fa-cogs"></i> Kelola Aktifitas Pembelajaran</a></li>';
-echo '</ul>';
+
 
 // --- 5. RENDER FORM TAMBAH / EDIT ---
 if ($action == 'add' || $action == 'edit') {

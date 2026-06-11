@@ -21,11 +21,9 @@ $PAGE->set_heading('Dashboard Analisis IDP');
 // --- RENDERING TAMPILAN ---
 echo $OUTPUT->header();
 
-// --- NAVIGASI TAB MENU (Menghubungkan Dashboard dan Monitor) ---
-echo '<ul class="nav nav-tabs mb-4">';
-echo '  <li class="nav-item"><a class="nav-item nav-link active" href="' . new moodle_url('/local/myidpebi/admin_dashboard.php') . '"><i class="fa fa-pie-chart"></i> Ringkasan & Tren</a></li>';
-echo '  <li class="nav-item"><a class="nav-item nav-link" href="' . new moodle_url('/local/myidpebi/admin_monitor.php') . '"><i class="fa fa-table"></i> Monitoring Data Karyawan</a></li>';
-echo '</ul>';
+// --- NAVIGASI BREADCRUMB ---
+$PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'));
+$PAGE->navbar->add('Dashboard IDP Global');
 
 // =========================================================
 // KUMPULAN QUERY AGREGAT AMAN (SESUAI SKEMA TABEL & LIB.PHP)

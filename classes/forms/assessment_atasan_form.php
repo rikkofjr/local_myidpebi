@@ -26,25 +26,37 @@ class assessment_atasan_form extends \moodleform {
             5 => '5 - Sangat Efektif'
         ];
 
-        // Daftar butir pertanyaan kuesioner evaluasi oleh atasan (Gunakan q1, q2, dst agar dibaca dinamis)
-        $mform->addElement('select', 'q1', '1. Apakah aktivitas pengembangan yang dijalankan relevan dengan tuntutan kompetensi posisi?', $skala_opsi);
-        $mform->addElement('select', 'q2', '2. Seberapa besar peningkatan performa (kinerja) karyawan pasca pelaksanaan program?', $skala_opsi);
-        $mform->addElement('select', 'q3', '3. Apakah durasi Jam Pelajaran (JP) yang dicapai sudah mencukupi target pengembangan?', $skala_opsi);
-        $mform->addElement('select', 'q4', '4. Karyawan menunjukkan komitmen dan kemandirian tinggi dalam menyelesaikan target IDP?', $skala_opsi);
+        // 🟢 PROSES DINAMIS: Ambil daftar pertanyaan atasan aktif dari database via lib helper
+        $questions = local_myidpebi_get_active_questions('atasan');
 
-        // Atur agar kuesioner wajib diisi
-        $mform->addRule('q1', null, 'required', null, 'client');
-        $mform->addRule('q2', null, 'required', null, 'client');
-        $mform->addRule('q3', null, 'required', null, 'client');
-        $mform->addRule('q4', null, 'required', null, 'client');
+        if (!empty($questions)) {
+            $counter = 1;
+            foreach ($questions as $q) {
+                // Beri nama element field form secara urut seperti q1, q2, q3 secara dinamis
+                $element_name = 'q' . $counter;
+                $label_text = $counter . '. ' . s($q->question_text);
+
+                // Tambahkan elemen select dropdown ke form atasan
+                $mform->addElement('select', $element_name, $label_text, $skala_opsi);
+                
+                // Set aturan wajib diisi (Required)
+                $mform->addRule($element_name, null, 'required', null, 'client');
+                
+                $counter++;
+            }
+        } else {
+            // Antisipasi jika data master kuesioner atasan kosong
+            $mform->addElement('html', '<div class="alert alert-danger">Belum ada butir kuesioner Atasan aktif yang dikonfigurasi oleh Administrator.</div>');
+        }
 
         $mform->addElement('header', 'header_catatan', 'Catatan & Kesimpulan Akhir Atasan');
         
         // Field kesimpulan_atasan sesuai dengan struktur install.xml Anda
         $mform->addElement('textarea', 'kesimpulan_atasan', 'Catatan Evaluasi / Rekomendasi oleh Atasan', ['rows' => 4, 'cols' => 60]);
         $mform->setType('kesimpulan_atasan', PARAM_TEXT);
-        $mform->addRule('kesimpulan_atasan', 'Catatan evaluasi wajib diisi oleh atasan.', 'required', null, 'client');
+        $mform->addRule('kesimpulan_atasan', null, 'required', null, 'client');
 
-        $this->add_action_buttons(true, 'Kirim Penilaian & Verifikasi Tuntas');
+        // Tombol Submit Form
+        $this->add_action_buttons(true, 'Verifikasi & Tutup Dokumen IDP');
     }
 }

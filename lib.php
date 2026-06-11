@@ -193,3 +193,23 @@ function local_myidpebi_get_user_field_value($userid, $sumber_field = 'user_tabl
 
     return '';
 }
+
+/**
+ * HELPER LOADER: Mengambil daftar pertanyaan kuesioner aktif dari database kustom
+ * * @param string $type Tipe kuesioner ('karyawan' atau 'atasan')
+ * @return array Array of objects berisi data pertanyaan terpilih
+ */
+function local_myidpebi_get_active_questions($type = 'karyawan') {
+    global $DB;
+    
+    // Validasi parameter tipe demi keamanan database query
+    if (!in_array($type, ['karyawan', 'atasan'])) {
+        return [];
+    }
+
+    // Mengambil records yang aktif dan diurutkan berdasarkan q_sort secara urut (Ascending)
+    return $DB->get_records('local_myidpebi_questions', 
+        ['q_type' => $type, 'is_active' => 1], 
+        'q_sort ASC'
+    );
+}

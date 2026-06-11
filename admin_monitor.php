@@ -29,18 +29,11 @@ $PAGE->set_title('Admin: Monitoring Global IDP');
 $PAGE->set_heading('Panel Kontrol Administrator IDP');
 
 // --- NAVIGASI BREADCRUMB ---
-$PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'));
+$PAGE->navbar->add('Admin Panel', new moodle_url('/local/myidpebi/admin_panel.php'));
 $PAGE->navbar->add('Monitoring Global');
 
 echo $OUTPUT->header();
 
-// =========================================================================
-// ADDED: NAVIGASI TAB MENU (Sinkron dengan yang ada di admin_dashboard.php)
-// =========================================================================
-echo '<ul class="nav nav-tabs mb-4">';
-echo '  <li class="nav-item"><a class="nav-item nav-link" href="' . new moodle_url('/local/myidpebi/admin_dashboard.php') . '"><i class="fa fa-pie-chart"></i> Ringkasan & Tren</a></li>';
-echo '  <li class="nav-item"><a class="nav-item nav-link active" href="' . new moodle_url('/local/myidpebi/admin_monitor.php') . '"><i class="fa fa-table"></i> Monitoring Data Karyawan</a></li>';
-echo '</ul>';
 
 // --- 3. FILTER UNTUK ADMIN (Menggunakan Fungsi Pusat lib.php) ---
 $st0 = local_myidpebi_get_status_info(0)->text;

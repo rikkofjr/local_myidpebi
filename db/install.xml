@@ -69,5 +69,18 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
         </TABLE>
+        <TABLE NAME="local_myidpebi_questions" COMMENT="Master data butir kuesioner efektivitas IDP dinamis untuk Karyawan dan Atasan">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="q_type" TYPE="char" LENGTH="20" NOTNULL="true" DEFAULT="karyawan" COMMENT="Tipe: karyawan atau atasan"/>
+                <FIELD NAME="q_sort" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" COMMENT="Nomor urut tampilan soal"/>
+                <FIELD NAME="question_text" TYPE="text" NOTNULL="true" COMMENT="Isi teks butir pertanyaan kuesioner"/>
+                <FIELD NAME="is_active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" COMMENT="Saklar aktif: 1=Aktif, 0=Nonaktif"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Timestamp data dibuat"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+            </KEYS>
+        </TABLE>
     </TABLES>
 </XMLDB>
