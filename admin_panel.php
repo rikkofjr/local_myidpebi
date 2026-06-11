@@ -101,7 +101,20 @@ echo '          </div>';
 echo '      </div>';
 echo '  </div>';
 
+// 📌 CARD 4: CONFIGURATION LEARNING ACTIVITY
+$learning_activity_url = new moodle_url('/local/myidpebi/admin_learning_activity.php');
+echo '  <div class="col-md-4 mb-4">';
+echo '      <div class="card h-100 shadow-sm border-dark">';
+echo '          <div class="card-body d-flex flex-column">';
+echo '              <h5 class="card-title text-dark"><i class="fa fa-book fa-2x text-danger mr-2"></i> Learning Activity</h5>';
+echo '              <p class="card-text text-muted flex-grow-1">Atur aktivitas pembelajaran, JP dari aktivitas tersebut, dan evidence apa yang digunakan sesuai dengan jenis aktivitas pembelajaran.</p>';
+echo '              <a href="' . $learning_activity_url . '" class="btn btn-danger btn-block mt-3">Buka <i class="fa fa-arrow-circle-right"></i></a>';
+echo '          </div>';
+echo '      </div>';
+echo '  </div>';
+
 echo '</div>'; // End Row
+
 echo '</div>'; // End Container
 
 echo $OUTPUT->footer();

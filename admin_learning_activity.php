@@ -164,7 +164,6 @@ else {
                     <th>Bentuk CDP</th>
                     <th>Tipe Aktivitas</small></th>
                     <th>Aktifitas Pembelajaran <small>Learning Activity</small></th>
-                    <th width="150">Min JP</th>
                     <th width="150">Max JP</th>
                     <th width="150">Bentuk Evidence</th>
                     <th width="150">Aksi</th>
@@ -178,7 +177,6 @@ else {
                             <td class="align-middle font-weight-bold text-dark"><?php echo s($r->bentuk_cdp); ?></td>
                             <td class="align-middle font-weight-bold text-dark"><?php echo s($r->tipe_aktivitas_cdp); ?></td>
                             <td class="align-middle font-weight-bold text-dark"><?php echo s($r->learning_activity); ?></td>
-                            <td class="text-center align-middle bg-light"><?php echo (int)$r->jp_min; ?> JP</td>
                             <td class="text-center align-middle bg-light"><?php echo (int)$r->jp_max; ?> JP</td>
                             <td class="align-middle font-weight-bold text-dark"><?php echo s($r->bentuk_evidence); ?></td>
                             <td class="text-center align-middle">
