@@ -15,7 +15,8 @@ class idp_form extends \moodleform {
         $mform->addElement('header', 'header_idp', 'Informasi Program IDP');
         
         $mform->addElement('text', 'nama_idp', 'Program IDP');
-        $mform->setType('nama_idp', PARAM_TEXT, ['disabled' => true]);
+        $mform->setType('nama_idp', PARAM_TEXT);
+        $mform->getElement('nama_idp')->updateAttributes(['readonly' => 'readonly']);
         $mform->addRule('nama_idp', null, 'required', null, 'client');
 
         // --- AMBIL DATA USER UNTUK AUTOCOMPLETE LOKAL (DINAMIS UI ADMIN) ---

@@ -50,4 +50,56 @@ function xmldb_local_myidpebi_install() {
             $DB->insert_record('local_myidpebi_learning_activity', $record);
         }
     }
+
+    // =========================================================================
+    // 2. 🟢 BARU: SEEDER BUTIR KUESIONER DINAMIS (Pindahan dari upgrade.php)
+    // =========================================================================
+    
+    // A. Pertanyaan Default Karyawan
+    $pertanyaan_karyawan = [
+        'Anda memahami dengan jelas target pengembangan diri yang tertuang dalam IDP ini',
+        'Aktivitas pengembangan yang dirancang dalam IDP ini menunjang penyelesaian tugas utama Anda saat ini',
+        'Aktivitas pengembangan yang dirancang dalam IDP ini mempersiapkan kompetensi Anda untuk penugasan di masa datang',
+        'Alokasi waktu (Jam Pelajaran) yang ditargetkan sudah realistis untuk Anda penuhi di tengah rutinitas kerja',
+        'Anda mendapatkan materi/pembelajaran/fasilitas penunjang yang berkualitas selama pelaksanaan IDP',
+        'Metode pengembangan yang digunakan (seperti training, mentoring, atau self-learning) sangat efektif membantu proses belajar Anda',
+        'Anda mendapatkan dukungan dari para pihak terkait dalam menjalankan IDP',
+        'Anda merasa lebih siap untuk mendapatkan tanggung jawab yang lebih besar setelah menjalankan IDP',
+        'Anda ingin melanjutkan pengembangan di masa datang melalui IDP',
+        'IDP yang Anda jalankan selaras dengan tuntutan perusahaan atau dept/sub dept yang Anda temati'
+    ];
+
+    $sort_karyawan = 1;
+    foreach ($pertanyaan_karyawan as $q_text) {
+        if (!$DB->record_exists('local_myidpebi_questions', ['question_text' => $q_text, 'q_type' => 'karyawan'])) {
+            $record = new stdClass();
+            $record->q_type        = 'karyawan';
+            $record->q_sort        = $sort_karyawan++;
+            $record->question_text = $q_text;
+            $record->is_active     = 1;
+            $record->timecreated   = time();
+            $DB->insert_record('local_myidpebi_questions', $record);
+        }
+    }
+
+    // B. Pertanyaan Default Atasan
+    $pertanyaan_atasan = [
+        'Apakah aktivitas pengembangan yang dijalankan relevan dengan tuntutan kompetensi posisi?',
+        'Seberapa besar peningkatan performa (kinerja) karyawan pasca pelaksanaan program?',
+        'Apakah durasi Jam Pelajaran (JP) yang dicapai sudah mencukupi target pengembangan?',
+        'Karyawan menunjukkan komitmen dan kemandirian tinggi dalam menyelesaikan target IDP?'
+    ];
+
+    $sort_atasan = 1;
+    foreach ($pertanyaan_atasan as $q_text) {
+        if (!$DB->record_exists('local_myidpebi_questions', ['question_text' => $q_text, 'q_type' => 'atasan'])) {
+            $record = new stdClass();
+            $record->q_type        = 'atasan';
+            $record->q_sort        = $sort_atasan++;
+            $record->question_text = $q_text;
+            $record->is_active     = 1;
+            $record->timecreated   = time();
+            $DB->insert_record('local_myidpebi_questions', $record);
+        }
+    }
 }
