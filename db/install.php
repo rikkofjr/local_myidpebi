@@ -73,15 +73,13 @@ function xmldb_local_myidpebi_install() {
 
         $sort_karyawan = 1;
         foreach ($pertanyaan_karyawan as $q_text) {
-            if (!$DB->record_exists('local_myidpebi_questions', ['question_text' => $q_text, 'q_type' => 'karyawan'])) {
-                $record = new stdClass();
-                $record->q_type        = 'karyawan';
-                $record->q_sort        = $sort_karyawan++;
-                $record->question_text = $q_text;
-                $record->is_active     = 1;
-                $record->timecreated   = time();
-                $DB->insert_record('local_myidpebi_questions', $record);
-            }
+            $record = new stdClass();
+            $record->q_type        = 'karyawan';
+            $record->q_sort        = $sort_karyawan++;
+            $record->question_text = $q_text;
+            $record->is_active     = 1;
+            $record->timecreated   = time();
+            $DB->insert_record('local_myidpebi_questions', $record);
         }
 
         // B. Pertanyaan Default Atasan
@@ -94,15 +92,13 @@ function xmldb_local_myidpebi_install() {
 
         $sort_atasan = 1;
         foreach ($pertanyaan_atasan as $q_text) {
-            if (!$DB->record_exists('local_myidpebi_questions', ['question_text' => $q_text, 'q_type' => 'atasan'])) {
-                $record = new stdClass();
-                $record->q_type        = 'atasan';
-                $record->q_sort        = $sort_atasan++;
-                $record->question_text = $q_text;
-                $record->is_active     = 1;
-                $record->timecreated   = time();
-                $DB->insert_record('local_myidpebi_questions', $record);
-            }
+           $record = new stdClass();
+            $record->q_type        = 'atasan';
+            $record->q_sort        = $sort_atasan++;
+            $record->question_text = $q_text;
+            $record->is_active     = 1;
+            $record->timecreated   = time();
+            $DB->insert_record('local_myidpebi_questions', $record);
         }
     }
 }
