@@ -93,7 +93,7 @@ if ($mform->is_cancelled()) {
     // Alirkan navigasi kembali ke halaman view_details dengan notifikasi sukses
     redirect(
         new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]), 
-        'Evaluasi efektivitas mandiri berhasil disimpan. Skor efektivitas Anda: ' . number_format($skor_persentase, 2) . '%', 
+        'Evaluasi efektivitas mandiri berhasil disimpan. Skor efektivitas Anda: ' . number_format($skor_persentase, 2) . '', 
         \core\output\notification::NOTIFY_SUCCESS
     );
 }

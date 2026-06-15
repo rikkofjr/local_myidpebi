@@ -419,7 +419,7 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '<div class="alert alert-warning d-flex justify-content-between align-items-center mb-4">';
     echo '  <div>';
     echo '      <h5><i class="fa fa-exclamation-triangle"></i> Self Assement IDP</h5>';
-    echo '      <p class="mb-0">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
+    echo '      <p class="mb-0 text-black">Lakukan self assement Jika anda telah mengisi semua rincian aktifitas dan telah mengkonsultasikan dengan pembimbing anda.</p>';
     echo '  </div>';
     echo '  <a href="' . $assessment_url . '" class="btn btn-success text-white" onclick="return confirm(\'Apakah Anda yakin sudah mengecek ulang seluruh rincian aktivitas IDP Anda dan mengonsultasikannya dengan atasan?\');">';
     echo '      <i class="fa fa-pencil-square-o"></i> Isi Evaluasi Efektivitas IDP';
@@ -442,7 +442,7 @@ if ($is_pembimbing || $is_atasan_langsung) {
         echo '<div class="alert alert-info d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mb-0" role="alert">';
         echo '    <div class="mb-3 mb-md-0 mr-md-3">';
         echo '        <h5 class="alert-heading mb-1"><i class="fa fa-info-circle mr-2"></i>Konfirmasi Persetujuan IDP</h5>';
-        echo '        <p class="mb-0 text-primary">Pastikan karyawan ybs. sudah melakukan konsultasi dengan Anda mengenai kegiatan yang akan dijalankan.</p>';
+        echo '        <p class="mb-0 text-black">Pastikan karyawan ybs. sudah melakukan konsultasi dengan Anda mengenai kegiatan yang akan dijalankan.</p>';
         echo '    </div>';
         echo '    <div class="text-nowrap">';
         echo '        <a href="'.$approve_url.'" class="btn btn-primary px-4 py-2" onclick="return confirm(\''.$confirm_msg.'\')"><i class="fa fa-check mr-2"></i>Setujui Program</a>';
