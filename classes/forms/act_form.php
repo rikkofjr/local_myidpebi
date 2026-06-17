@@ -11,6 +11,10 @@ class act_form extends \moodleform {
         $status = $this->_customdata['status'];
         $act_id = $this->_customdata['act_id']; // Cek apakah Edit atau Baru
 
+        // =====================================
+        // Login Hidden ID
+        // =====================================
+
         $mform->addElement('hidden', 'idp_id');
         $mform->setType('idp_id', PARAM_INT);
         $mform->addElement('hidden', 'id');
@@ -21,6 +25,13 @@ class act_form extends \moodleform {
         // ==========================================
         $mform->addElement('header', 'group_form_1', 'LANGKAH 2: PENYUSUNAN RENCANA PENGEMBANGAN INDIVIDU');
 
+        $mform->addElement('html', '
+            <div class="alert alert-info py-2 mb-3">
+                <a href="/local/myidpebi/view_learning_activity.php" target="_blank" class="font-weight-bold text-underline text-black">
+                    <i class="fa fa-external-link"></i> Lihat Kamus Aktivitas Pembelajaran
+                </a>.
+            </div>
+        ');
         
         // Mengambil master data dari tabel baru local_myidpebi_learning_activity
         $master_kegiatan = $DB->get_records('local_myidpebi_learning_activity', null, 'tipe_aktivitas_cdp ASC', 'id, learning_activity, tipe_aktivitas_cdp');
@@ -34,7 +45,6 @@ class act_form extends \moodleform {
         $mform->addElement('select', 'learning_activity', 'Aktivitas pengembangan yang akan dilakukan', $jenis_opsi);
         $mform->setType('learning_activity', PARAM_INT);
         $mform->addRule('learning_activity', 'Harus Diisi', 'required', null, 'client');
-        
 
         $mform->addElement('text', 'nama_activity', 'Detail Kegiatan');
         $mform->setType('nama_activity', PARAM_TEXT);
@@ -67,14 +77,30 @@ class act_form extends \moodleform {
             
             if ($current_act) {
                 // Tarik teks panduan evidence dari tabel master berdasarkan ID tersebut
-                $master_rule = $DB->get_record('local_myidpebi_learning_activity', ['id' => $current_act->learning_activity], 'bentuk_evidence');
+                $master_rule = $DB->get_record('local_myidpebi_learning_activity', ['id' => $current_act->learning_activity]);
                 
-                if ($master_rule && !empty($master_rule->bentuk_evidence)) {
+                if ($master_rule) {
+                    $clean_evidence = str_replace('|', '<br class="mb-1">', s($master_rule->bentuk_evidence));
+                    $max_jp_value = $master_rule->jp_max;
+
+                    $html_notes = '
+                    <div class="alert alert-warning py-2 mb-2" style="font-size: 13px; id="note_evidence_realisasi">
+                        <div class="mb-1">
+                            <strong><i class="fa fa-clock-o"></i> Batas Maksimum Realisasi:</strong> 
+                            <span class="badge badge-danger px-2 py-1">' . $max_jp_value . ' JP</span>
+                        </div>
+                        <div>
+                            <strong><i class="fa fa-folder-open"></i> Panduan Dokumen Bukti (Evidence):</strong><br>
+                            <span class="text-dark font-weight-bold">' . $clean_evidence . '</span>
+                        </div>
+                    </div>';
+
                     // Langsung cetak notes teks merah tepat di atas box upload
-                    $mform->addElement('static', 'note_evidence', '<strong>💡 Panduan Dokumen Bukti:</strong>', '<span class="text-danger">' . s($master_rule->bentuk_evidence) . '</span>');
-                }
+                    $mform->addElement('static', 'note_evidence_info', '', $html_notes);                }
             }
         }
+
+        
         $mform->addElement('filepicker', 'evidence_file', 'Evidence Pengembangan', null, ['maxbytes'=>2048*1024, 'accepted_types'=>['.pdf','.jpg','.png']]);
 
         // ==========================================
