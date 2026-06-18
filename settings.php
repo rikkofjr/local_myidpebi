@@ -3,7 +3,7 @@ defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) {
     // Membuat halaman utama konfigurasi plugin
-    $settings = new admin_settingpage('local_myidpebi', 'Pengaturan Master IDP PeBi');
+    $settings = new admin_settingpage('local_myidpebi', 'Pengaturan Master IDP EBI');
 
     // =========================================================================
     // 📦 BAGIAN 1: FORMAT NAMA DOKUMEN IDP AUTOMATIS
