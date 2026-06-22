@@ -106,7 +106,7 @@ class idp_form extends \moodleform {
         $mform->addElement('textarea', 'area_pengembangan_ditingkatkan', 'Area pengembangan yang perlu ditingkatkan', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Area pengembangan yang perlu ditingkatkan']);
         $mform->setType('area_pengembangan_ditingkatkan', PARAM_RAW);
         
-        $mform->addElement('textarea', 'area_pengembangan_diharapkan', 'Area pengembangan yang perlu diharapkan', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Area pengembangan yang perlu ditingkatkan']);
+        $mform->addElement('textarea', 'area_pengembangan_diharapkan', 'Hasil Pengembangan Yang Dituju', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Area pengembangan yang perlu ditingkatkan']);
         $mform->setType('area_pengembangan_diharapkan', PARAM_RAW);
         
 
