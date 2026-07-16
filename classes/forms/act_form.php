@@ -57,8 +57,9 @@ class act_form extends \moodleform {
         $mform->addRule('jumlah_jp_perencanaan', 'Wajib diisi !', 'required', null, 'client');
         $mform->addRule('jumlah_jp_perencanaan', 'hanya boleh diisi oleh angka!', 'numeric', null, 'client');
 
-        $mform->addElement('text', 'waktu_teks', 'Periode Pelaksanaan (Rencana)');
-        $mform->setType('waktu_teks', PARAM_TEXT);
+        //Periode Perencanaan
+        $mform->addElement('date_selector', 'perencanaan_tanggal_mulai', 'Perencanaan Tanggal Mulai');
+        $mform->addElement('date_selector', 'perencanaan_tanggal_selesai', 'Perencanaan Tanggal Selesai');
         
         // ==========================================
         // GROUP FORM 2: REALISASI & EVIDENCE
@@ -69,6 +70,10 @@ class act_form extends \moodleform {
         $mform->setType('jumlah_jp_realisasi', PARAM_INT);
         $mform->addHelpButton('jumlah_jp_realisasi', 'help_jp', 'local_myidpebi'); // Opsional jika ingin ada tombol tanya info
         $mform->addRule('jumlah_jp_realisasi', 'Kolom ini hanya boleh diisi oleh angka!', 'numeric', null, 'client');
+
+        //Periode Perencanaan Selesai
+        $mform->addElement('date_selector', 'realisasi_pelaksanaan_mulai', 'Realisasi Pelaksanaan Mulai');
+        $mform->addElement('date_selector', 'realisasi_pelaksanaan_selesai', 'Realisasi Pelaksanaan Selesai');
 
         
         if ($status == 1 && $act_id) {
@@ -109,7 +114,7 @@ class act_form extends \moodleform {
         $is_clone = optional_param('is_clone', 0, PARAM_INT);
 
         if ($status == 0) {
-            $mform->freeze(['jumlah_jp_realisasi']);
+            $mform->freeze(['jumlah_jp_realisasi', 'realisasi_pelaksanaan_mulai', 'realisasi_pelaksanaan_selesai']);
             if ($mform->elementExists('evidence_file')) {
                 $mform->getElement('evidence_file')->freeze();
             }
@@ -126,13 +131,8 @@ class act_form extends \moodleform {
                     
                     );
                 }
-                if ($mform->elementExists('waktu_teks')) {
-                    $mform->getElement('waktu_teks')->updateAttributes([
-                        'readonly' => 'readonly',
-                        'style' => 'background-color: #e9ecef;']
-                        
-                        );
-                }
+
+                // Kunci JP Perencanaan
                 if ($mform->elementExists('jumlah_jp_perencanaan')) {
                     $mform->getElement('jumlah_jp_perencanaan')->updateAttributes([
                         'readonly' => 'readonly', 
@@ -140,7 +140,9 @@ class act_form extends \moodleform {
                         
                         );
                 }
-
+                // Kunci Date Selector Perencanaan (Dropdown tidak mendukung readonly, gunakan freeze)
+                $mform->freeze(['perencanaan_tanggal_mulai', 'perencanaan_tanggal_selesai']);
+                
                 // 2. Kunci input dropdown 'learning_activity' (atau 'learning_activity_id') menggunakan CSS pointer-events
                 // Dropdown tidak mendukung readonly, jadi kita matikan interaksi klik-nya agar tidak bisa diganti karyawan
                 if ($mform->elementExists('learning_activity')) {
@@ -152,7 +154,7 @@ class act_form extends \moodleform {
                 
             } else {
                 // Jika TAMBAH BARU di status 1: Buka rencana, kunci realisasi
-                $mform->freeze(['jumlah_jp_realisasi']);
+                $mform->freeze(['jumlah_jp_realisasi', 'realisasi_pelaksanaan_mulai', 'realisasi_pelaksanaan_selesai']);
                 if ($mform->elementExists('evidence_file')) {
                     $mform->getElement('evidence_file')->freeze();
                 }
@@ -169,7 +171,45 @@ class act_form extends \moodleform {
         global $DB;
         $errors = parent::validation($data, $files);
 
-        // 🟢 PERBAIKAN 2: Tangkap ID kegiatan (Tipe angka)
+        // =========================================================================
+        // VALIDASI 1: VALIDASI KUNCI RENTANG TANGGAL (RANGE TIMELINE)
+        // =========================================================================
+        $rencana_mulai = isset($data['perencanaan_tanggal_mulai']) ? (int)$data['perencanaan_tanggal_mulai'] : 0;
+        $rencana_selesai = isset($data['perencanaan_tanggal_selesai']) ? (int)$data['perencanaan_tanggal_selesai'] : 0;
+
+        // Validasi internal logika perencanaan tanggal
+        if ($rencana_selesai > 0 && $rencana_selesai < $rencana_mulai) {
+            $errors['perencanaan_tanggal_selesai'] = 'Tanggal selesai perencanaan tidak boleh mendahului tanggal mulai rencana.';
+        }
+
+        // Cek dan validasi range realisasi terhadap jendela waktu perencanaan
+        if (isset($data['realisasi_pelaksanaan_mulai']) && isset($data['realisasi_pelaksanaan_selesai'])) {
+            $realisasi_mulai = (int)$data['realisasi_pelaksanaan_mulai'];
+            $realisasi_selesai = (int)$data['realisasi_pelaksanaan_selesai'];
+
+            // Lewati validasi jika nilainya 0 (biasanya saat form realisasi sedang di-freeze/ditutup)
+            if ($realisasi_mulai > 0 && $realisasi_selesai > 0) {
+                
+                if ($realisasi_selesai < $realisasi_mulai) {
+                    $errors['realisasi_pelaksanaan_selesai'] = 'Tanggal selesai pelaksanaan realisasi tidak boleh mendahului tanggal mulai pelaksanaan.';
+                }
+
+                // Pengecekan mutlak: Apakah tanggal realisasi bocor keluar dari batas range rencana
+                if ($realisasi_mulai < $rencana_mulai || $realisasi_mulai > $rencana_selesai) {
+                    $errors['realisasi_pelaksanaan_mulai'] = 'Tanggal mulai pelaksanaan harus berada di dalam rentang rentang tanggal perencanaan (' . userdate($rencana_mulai, '%d %b %Y') . ' s/d ' . userdate($rencana_selesai, '%d %b %Y') . ').';
+                }
+
+                if ($realisasi_selesai < $rencana_mulai || $realisasi_selesai > $rencana_selesai) {
+                    $errors['realisasi_pelaksanaan_selesai'] = 'Tanggal selesai pelaksanaan harus berada di dalam rentang rentang tanggal perencanaan (' . userdate($rencana_mulai, '%d %b %Y') . ' s/d ' . userdate($rencana_selesai, '%d %b %Y') . ').';
+                }
+            }
+        }
+
+        // =========================================================================
+        // VALIDASI 2: VALIDASI BATASAN JP MIN/MAX DARI DATABASE MASTER
+        // =========================================================================
+
+        // Tangkap ID kegiatan (Tipe angka)
         $activity_id = isset($data['learning_activity']) ? (int)$data['learning_activity'] : 0;
 
         if ($activity_id > 0) {

@@ -61,15 +61,20 @@ if ($act_id) {
 
     $form_data->learning_activity            = (int)$activity->learning_activity;
     $form_data->nama_activity                   = $activity->nama_activity;
-    $form_data->waktu_teks                      = $activity->waktu_teks;
+    $form_data->perencanaan_tanggal_mulai   = $activity->perencanaan_tanggal_mulai;
+    $form_data->perencanaan_tanggal_selesai = $activity->perencanaan_tanggal_selesai;
     $form_data->jumlah_jp_perencanaan           = $activity->jumlah_jp_perencanaan;
 
     // Tampilkan angka JP lama di form jika sedang EDIT biasa. 
     // Jika sedang DUPLIKAT (is_clone), form JP tetap dikosongkan (0).
     if (!$is_clone) {
         $form_data->jumlah_jp_realisasi       = $activity->jumlah_jp_realisasi;
+        $form_data->realisasi_pelaksanaan_mulai   = $activity->realisasi_pelaksanaan_mulai;
+        $form_data->realisasi_pelaksanaan_selesai = $activity->realisasi_pelaksanaan_selesai;
     } else {
         $form_data->jumlah_jp_realisasi       = 0;
+        $form_data->realisasi_pelaksanaan_mulai   = 0;
+        $form_data->realisasi_pelaksanaan_selesai = 0;
     }
     
     // Siapkan draft file hanya jika dalam mode edit biasa (bukan kloning)
@@ -103,7 +108,8 @@ if ($mform->is_cancelled()) {
     // FIXED: Mengambil data pecahan form untuk disimpan ke kolom DB masing-masing
     $act->learning_activity = (int)$data->learning_activity;
     $act->nama_activity       = $data->nama_activity;
-    $act->waktu_teks          = $data->waktu_teks;
+    $act->perencanaan_tanggal_mulai   = (int)$data->perencanaan_tanggal_mulai;
+    $act->perencanaan_tanggal_selesai = (int)$data->perencanaan_tanggal_selesai;
     $act->jumlah_jp_perencanaan          = $data->jumlah_jp_perencanaan;
 
     // Logika Realisasi JP (Hanya disimpan jika status dokumen berjalan dan bukan duplikasi baru)
@@ -117,9 +123,13 @@ if ($mform->is_cancelled()) {
         } else {
             $act->jumlah_jp_realisasi = $input_jp;
         }
+        $act->realisasi_pelaksanaan_mulai   = (int)$data->realisasi_pelaksanaan_mulai;
+        $act->realisasi_pelaksanaan_selesai = (int)$data->realisasi_pelaksanaan_selesai;
     } else {
         // Jika masih berstatus Draft (0) atau sedang menduplikat baru, paksa JP ke 0
         $act->jumlah_jp_realisasi = 0;
+        $act->realisasi_pelaksanaan_mulai   = 0;
+        $act->realisasi_pelaksanaan_selesai = 0;
     }
 
     // Eksekusi CRUD Database dengan dukungan Duplikasi

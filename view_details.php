@@ -277,13 +277,13 @@ echo '  <thead class="table-light text-center align-middle">
         </thead>
         <tbody><tr>';
 
-echo '<td>' . $idp->tuntutan_sekarang_performance . '</td>';
-echo '<td>' . $idp->tuntutan_sekarang_kompetensi . '</td>';
-echo '<td>' . $idp->tuntutan_berikutnya_performance . '</td>';
-echo '<td>' . $idp->tuntutan_berikutnya_kompetensi . '</td>';
-echo '<td>' . $idp->tuntutan_lingkungan . '</td>';
-echo '<td>' . $idp->area_pengembangan_ditingkatkan . '</td>';
-echo '<td>' . $idp->area_pengembangan_diharapkan . '</td>';
+echo '<td>' . s($idp->tuntutan_sekarang_performance) . '</td>';
+echo '<td>' . s($idp->tuntutan_sekarang_kompetensi) . '</td>';
+echo '<td>' . s($idp->tuntutan_berikutnya_performance) . '</td>';
+echo '<td>' . s($idp->tuntutan_berikutnya_kompetensi) . '</td>';
+echo '<td>' . s($idp->tuntutan_lingkungan) . '</td>';
+echo '<td>' . s($idp->area_pengembangan_ditingkatkan) . '</td>';
+echo '<td>' . s($idp->area_pengembangan_diharapkan) . '</td>';
 
 echo '</tr></tbody>';
 echo '</table>';
@@ -315,22 +315,21 @@ $activities = $DB->get_records_sql($sql_act, ['idp_id' => $idp_id]);
 echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
 echo '  <thead class="table-light text-center align-middle">
-            <tr>
-                <th colspan="3">Rencana Pengembangan</th>
-                <th rowspan="2" colspan="2">Jam Pelajaran (JP)</th>
-                <th rowspan="3">Evidence</th>
-                <th rowspan="3">Aksi</th>
-            </tr>
-            <tr>
-                <th rowspan="2">Aktivitas Pembelajaran</th>
-                <th rowspan="2">Detail Aktivitas</th>
-                <th rowspan="2">Periode</th>
-            </tr>
-            <tr>
-                <th>Rencana</th>
-                <th>Realisasi</th>
-            </tr>
-        </thead>
+    <tr>
+        <th rowspan="2" class="align-middle">Aktivitas Pembelajaran</th>
+        <th rowspan="2" class="align-middle">Detail Aktivitas</th>
+        <th colspan="2">Perencanaan Program</th>
+        <th colspan="2">Realisasi Program</th>
+        <th rowspan="2" class="align-middle">Evidence</th>
+        <th rowspan="2" class="align-middle">Aksi</th>
+    </tr>
+    <tr>
+        <th>Target JP</th>
+        <th>Periode Rencana</th>
+        <th>Capaian JP</th>
+        <th>Periode Pelaksanaan</th>
+    </tr>
+</thead>
         <tbody>';
 
 if ($activities) {
@@ -360,9 +359,14 @@ if ($activities) {
 
         echo "  <td {$text_style} class='text-center'>{$a->nama_learning_activity}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
-        echo "  <td {$text_style}>{$a->waktu_teks}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_perencanaan}</td>";
+        echo "<td {$text_style}>" . userdate($a->perencanaan_tanggal_mulai, '%d-%m-%Y') . " s/d " . userdate($a->perencanaan_tanggal_selesai, '%d-%m-%Y') . "</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_realisasi}</td>";
+        $realisasi_periode = '-';
+        if (!empty($a->realisasi_pelaksanaan_mulai) && !empty($a->realisasi_pelaksanaan_selesai)) {
+            $realisasi_periode = userdate($a->realisasi_pelaksanaan_mulai, '%d-%m-%Y') . " <span class=text-muted small>s/d</span><br> " . userdate($a->realisasi_pelaksanaan_selesai, '%d-%m-%Y');
+        }
+        echo "<td {$text_style} style=white-space: nowrap;>{$realisasi_periode}</td>";
         echo "  <td class='text-center'>{$file_link}</td>";
         echo "  <td class='text-center'>";
         
