@@ -318,8 +318,8 @@ echo '  <thead class="table-light text-center align-middle">
     <tr>
         <th rowspan="2" class="align-middle">Aktivitas Pembelajaran</th>
         <th rowspan="2" class="align-middle">Detail Aktivitas</th>
-        <th colspan="2">Perencanaan Program</th>
-        <th colspan="2">Realisasi Program</th>
+        <th colspan="2">Perencanaan Aktivitas</th>
+        <th colspan="2">Realisasi Aktivitas</th>
         <th rowspan="2" class="align-middle">Evidence</th>
         <th rowspan="2" class="align-middle">Aksi</th>
     </tr>
