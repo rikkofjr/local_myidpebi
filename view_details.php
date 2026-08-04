@@ -316,8 +316,8 @@ echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
 echo '  <thead class="table-light text-center align-middle">
     <tr>
-        <th rowspan="2" class="align-middle">Aktivitas Pembelajaran</th>
-        <th rowspan="2" class="align-middle">Detail Aktivitas</th>
+        <th rowspan="2" class="align-middle">Aktivitas Pengembangan</th>
+        <th rowspan="2" class="align-middle">Detil Aktivitas</th>
         <th colspan="2">Perencanaan Aktivitas</th>
         <th colspan="2">Realisasi Aktivitas</th>
         <th rowspan="2" class="align-middle">Evidence</th>
@@ -357,7 +357,7 @@ if ($activities) {
         $textarea_box_style = 'style="max-height: 95px; overflow-y: auto; font-size: 15px; line-height: 1.4; padding: 6px; background: rgba(0,0,0,0.03); border-radius: 4px; border: 1px solid #e9ecef; white-space: pre-wrap; min-width: 150px;"';
 
 
-        echo "  <td {$text_style} class='text-center'>{$a->nama_learning_activity}</td>";
+        echo "  <td {$text_style} class='text-center bold'>{$a->nama_learning_activity}</td>";
         echo "  <td {$text_style}>{$a->nama_activity}</td>";
         echo "  <td {$text_style} class='text-center'>{$a->jumlah_jp_perencanaan}</td>";
         echo "<td {$text_style}>" . userdate($a->perencanaan_tanggal_mulai, '%d-%m-%Y') . " s/d " . userdate($a->perencanaan_tanggal_selesai, '%d-%m-%Y') . "</td>";

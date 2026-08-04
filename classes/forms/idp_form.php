@@ -94,23 +94,29 @@ class idp_form extends \moodleform {
 
         $mform->addElement('textarea', 'tuntutan_berikutnya_performance', '     a. Performance', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan prioritas/fokus area pengembangan berdasarkan perormance yang perlu ditingkatkan pada posisi berikutnya']);
         $mform->setType('tuntutan_berikutnya_performance', PARAM_RAW);
+        $mform->addRule('tuntutan_berikutnya_performance', 'Harus Diisi', 'required', null, 'client');
 
         $mform->addElement('textarea', 'tuntutan_berikutnya_kompetensi', '     b. Kompetensi', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan prioritas/fokus area pengembangan berdasarkan kompetensi yang perlu ditingkatkan pada posisi berikutnya']);
         $mform->setType('tuntutan_berikutnya_kompetensi', PARAM_RAW);
+        $mform->addRule('tuntutan_berikutnya_kompetensi', 'Harus Diisi', 'required', null, 'client');
 
         $mform->addElement('html', '<hr />');
 
         $mform->addElement('textarea', 'tuntutan_lingkungan', 'Tuntutan karena perubahan lingkungan', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Tuntutan karena perubahan lingkungan']);
         $mform->setType('tuntutan_lingkungan', PARAM_RAW);
-        
+        $mform->addRule('tuntutan_lingkungan', 'Harus Diisi', 'required', null, 'client');
+
         $mform->addElement('textarea', 'area_pengembangan_ditingkatkan', 'Area pengembangan yang perlu ditingkatkan', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Area pengembangan yang perlu ditingkatkan']);
         $mform->setType('area_pengembangan_ditingkatkan', PARAM_RAW);
-        
-        $mform->addElement('textarea', 'area_pengembangan_diharapkan', 'Hasil Pengembangan Yang Dituju', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan Area pengembangan yang perlu ditingkatkan']);
+        $mform->addRule('area_pengembangan_ditingkatkan', 'Harus Diisi', 'required', null, 'client');
+
+        $mform->addElement('textarea', 'area_pengembangan_diharapkan', 'Hasil Pengembangan Yang Dituju', ['rows' => 3, 'cols' => 50, 'placeholder' => 'Tuliskan hasil pengembangan yang dituju']);
         $mform->setType('area_pengembangan_diharapkan', PARAM_RAW);
+        $mform->addRule('area_pengembangan_diharapkan', 'Harus Diisi', 'required', null, 'client');
         
 
         $mform->addElement('html', '<hr />');
+        $mform->addElement('html', '<small>Berikan tanda strip "-" jika form tersebut tidak perlu diisi oleh Anda </small>');
 
         $this->add_action_buttons(true, 'Simpan Program');
     }

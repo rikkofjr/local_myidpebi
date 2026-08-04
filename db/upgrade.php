@@ -6,6 +6,11 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
+    // ====================
+    // Penambahan tanggal perencanaan dan realisasi 
+    // ====================
+
+
     // Jalankan upgrade jika versi plugin sebelumnya lebih rendah dari 2026071300
     if ($oldversion < 2026071300) {
 
@@ -37,6 +42,25 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
 
         // Kunci keberhasilan upgrade ke versi baru
         upgrade_plugin_savepoint(true, 2026071300, 'local', 'myidpebi');
+    }
+    // =========================================================================
+    // perubahan tipe data pada kolom nama_activity
+    // =========================================================================
+    if ($oldversion < 2026080400) {
+
+        // 1. Definisikan Tabel Target
+        $table = new xmldb_table('local_myidpebi_act');
+
+        // 2. Definisikan field nama_activity dengan tipe XMLDB_TYPE_TEXT
+        $field = new xmldb_field('nama_activity', XMLDB_TYPE_TEXT, null, null, null, null, null);
+
+        // 3. Eksekusi perubahan tipe data di database jika kolomnya ada
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_type($table, $field);
+        }
+
+        // Savepoint untuk versi 2026080400
+        upgrade_plugin_savepoint(true, 2026080400, 'local', 'myidpebi');
     }
 
     return true;

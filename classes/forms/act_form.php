@@ -46,7 +46,7 @@ class act_form extends \moodleform {
         $mform->setType('learning_activity', PARAM_INT);
         $mform->addRule('learning_activity', 'Harus Diisi', 'required', null, 'client');
 
-        $mform->addElement('text', 'nama_activity', 'Detail Kegiatan');
+        $mform->addElement('textarea', 'nama_activity', 'Detil Aktivitas', ['rows' => 4, 'cols' => 50,]);
         $mform->setType('nama_activity', PARAM_TEXT);
         $mform->addRule('nama_activity', 'Harus Diisi', 'required', null, 'client');
         
