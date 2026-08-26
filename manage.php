@@ -123,6 +123,4 @@ if ($records) {
     echo $OUTPUT->notification('Tidak ada data bimbingan IDP.', 'info');
 }
 
-echo '<div class="mt-3"><a href="index.php" class="btn btn-secondary">Kembali ke Dashboard Saya</a></div>';
-
 echo $OUTPUT->footer();
