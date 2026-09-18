@@ -62,6 +62,33 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
         // Savepoint untuk versi 2026080400
         upgrade_plugin_savepoint(true, 2026080400, 'local', 'myidpebi');
     }
+    // =========================================================================
+    // penambahan colom resume kapabilitas
+    // =========================================================================
+    if ($oldversion < 2026091800) {
+
+        // 1. Definisikan Tabel Target
+        $table = new xmldb_table('local_myidpebi');
+
+        // 2. Definisikan field dengan tipe XMLDB_TYPE_TEXT
+        $field = new xmldb_field(
+            'resume_kapabilitas', 
+            XMLDB_TYPE_TEXT, 
+            null, 
+            null, 
+            null, 
+            null, 
+            null, 
+            'verified_ldc_by' // Diletakkan setelah kolom verified_ldc_by
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Savepoint untuk versi 2026080400
+        upgrade_plugin_savepoint(true, 2026091800, 'local', 'myidpebi');
+    }
 
     return true;
 }

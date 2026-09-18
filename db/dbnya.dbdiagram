@@ -1,10 +1,11 @@
 {
-  "version": "2.0.0",
+  "version": "3.0.0",
   "darkMode": false,
   "gridEnabling": false,
   "currentViewName": null,
   "defaultView": {
     "detailLevel": "All",
+    "relationshipMode": "All",
     "tablePositions": [
       {
         "name": "local_myidpebi",
@@ -15,19 +16,50 @@
       {
         "name": "local_myidpebi_act",
         "schemaName": "public",
-        "x": 988.83984375,
-        "y": 12
+        "x": 963.9251427144852,
+        "y": 224.43060882912698
       },
       {
         "name": "local_myidpebi_learning_activity",
         "schemaName": "public",
-        "x": 12,
-        "y": 12
+        "x": 393.58831585972814,
+        "y": 619.1319252338632
       }
     ],
     "tableGroupCollapseStates": [],
     "stickyNoteLayouts": [],
-    "referencePaths": []
+    "referencePaths": [
+      {
+        "firstFieldNames": [
+          "idp_id"
+        ],
+        "firstTableName": "local_myidpebi_act",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "local_myidpebi",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      },
+      {
+        "firstFieldNames": [
+          "learning_activity_id"
+        ],
+        "firstTableName": "local_myidpebi_act",
+        "firstSchemaName": "public",
+        "firstRelation": "*",
+        "secondFieldNames": [
+          "id"
+        ],
+        "secondTableName": "local_myidpebi_learning_activity",
+        "secondSchemaName": "public",
+        "secondRelation": "1",
+        "checkPoints": []
+      }
+    ]
   },
   "views": {}
 }

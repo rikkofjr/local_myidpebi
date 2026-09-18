@@ -78,6 +78,13 @@ class idp_form extends \moodleform {
         // ==========================================
         // Isi rencana pengembangan
         // ==========================================
+        
+        $mform->addElement('html', '<b>Resume Kapabilitas</b>');
+        
+        $mform->addElement('textarea', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 3, 'cols' => 100, 'placeholder' => 'Informasikan resume kapabilitas di posisi anda saat ini']);
+        $mform->setType('resume_kapabilitas', PARAM_RAW);
+        $mform->addRule('resume_kapabilitas', 'Harus Diisi', 'required', null, 'client');
+        
         $mform->addElement('html', '<b>Tuntutan pada posisi sekarang (Performance & Kompetensi)</b>');
         
         $mform->addElement('textarea', 'tuntutan_sekarang_performance', '     a. Performance', ['rows' => 3, 'cols' => 100, 'placeholder' => 'Tuliskan prioritas/fokus area pengembangan berdasarkan perormance yang perlu ditingkatkan pada posisi saat ini']);

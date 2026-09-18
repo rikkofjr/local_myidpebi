@@ -15,6 +15,7 @@
                 <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
                 <FIELD NAME="verified_ldc_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas (dari LDC/HR)"/>
 
+                <FIELD NAME="resume_kapabilitas" TYPE="text"  NOTNULL="false"  COMMENT="Resume Kapabilitas Karyawan"/>
                 <FIELD NAME="tuntutan_sekarang_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Performance)"/>
                 <FIELD NAME="tuntutan_sekarang_kompetensi" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Kompetensi)"/>
                 <FIELD NAME="tuntutan_berikutnya_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Berikutnya (Performance)"/>

@@ -69,6 +69,7 @@ if ($mform->is_cancelled()) {
     $idp->userid     = $USER->id;
     $idp->mulai_date = $fromform->mulai_date;
     $idp->akhir_date = $fromform->akhir_date;
+    $idp->resume_kapabilitas = $fromform->resume_kapabilitas;
     $idp->tuntutan_sekarang_performance = $fromform->tuntutan_sekarang_performance;
     $idp->tuntutan_sekarang_kompetensi = $fromform->tuntutan_sekarang_kompetensi;
     $idp->tuntutan_berikutnya_performance = $fromform->tuntutan_berikutnya_performance;

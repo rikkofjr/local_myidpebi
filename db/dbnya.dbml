@@ -13,6 +13,7 @@ Table local_myidpebi {
   approved_by int [default: 0, note: 'ID User yang menyetujui program']
   verified_by int [default: 0, note: 'ID User yang memverifikasi tuntas']
   verified_ldc_by int [default: 0, note: 'ID User yang memverifikasi tuntas (dari LDC/HR)']
+  resume_kapabilitas text [note: 'Resume Kapabilitas']
   tuntutan_sekarang_performance text [note: 'Tuntutan Sekarang (Performance)']
   tuntutan_sekarang_kompetensi text [note: 'Tuntutan Sekarang (Kompetensi)']
   tuntutan_berikutnya_performance text [note: 'Tuntutan Berikutnya (Performance)']
@@ -24,7 +25,7 @@ Table local_myidpebi {
   kesimpulan_karyawan text [note: 'Catatan evaluasi mandiri oleh karyawan']
   skor_atasan decimal(5,2) [default: 0.00, note: 'Hasil penilaian atasan atas efektivitas IDP']
   kesimpulan_atasan text [note: 'Catatan evaluasi oleh atasan']
-  kesimpulan_hcm text [note: 'Catatan evaluasi oleh LDC/Manager role LMS']
+  kesimpulan_ldc text [note: 'Catatan evaluasi oleh LDC/Manager role LMS']
 
   Note: 'Data Utama IDP'
 }
@@ -32,7 +33,7 @@ Table local_myidpebi {
 Table local_myidpebi_act {
   id int [pk, increment, note: 'Primary Key']
   idp_id int [not null]
-  learning_activity varchar(100) [not null]
+  learning_activity_id int [not null]
   nama_activity varchar(255) [not null]
   jumlah_jp_perencanaan int [not null]
   waktu_teks varchar(255) [not null]
@@ -58,3 +59,4 @@ Table local_myidpebi_learning_activity {
 
 // Relasi Antar Tabel (Foreign Keys)
 Ref: local_myidpebi_act.idp_id > local_myidpebi.id [delete: cascade, update: cascade]
+Ref: local_myidpebi_act.learning_activity_id > local_myidpebi_learning_activity.id [delete: cascade, update: cascade]

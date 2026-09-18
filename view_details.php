@@ -262,6 +262,7 @@ echo '<div class="table-responsive">';
 echo '<table class="table table-bordered table-hover shadow-sm">';
 echo '  <thead class="table-light text-center align-middle">
             <tr>
+                <th rowspan="2">Resume Kapabilitas</th>
                 <th colspan="2">Tuntutan Pada Posisi Saat Ini</th>
                 <th colspan="2">Tuntutan Pada Posisi Berikutnya </th>
                 <th rowspan="2">Tuntutan Karena Perubahan Lingkungan</th>
@@ -277,6 +278,7 @@ echo '  <thead class="table-light text-center align-middle">
         </thead>
         <tbody><tr>';
 
+echo '<td>' . s($idp->resume_kapabilitas) . '</td>';
 echo '<td>' . s($idp->tuntutan_sekarang_performance) . '</td>';
 echo '<td>' . s($idp->tuntutan_sekarang_kompetensi) . '</td>';
 echo '<td>' . s($idp->tuntutan_berikutnya_performance) . '</td>';
