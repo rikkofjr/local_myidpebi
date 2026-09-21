@@ -7,7 +7,7 @@ global $DB, $USER, $PAGE, $OUTPUT;
 // 1. PROTEKSI AKSES: Hanya Site Admin atau Manager yang boleh masuk
 require_login();
 $context = context_system::instance();
-$is_manager = has_capability('moodle/site:viewreports', $context);
+$is_manager = has_capability('local/myidpebi:reset_idp', $context);
 
 if (!is_siteadmin() && !$is_manager) {
     throw new moodle_exception('nopermissiontoaccesspage', 'error');
