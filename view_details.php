@@ -69,7 +69,7 @@ $total_jp_rencana = $DB->get_field_sql("SELECT SUM(jumlah_jp_perencanaan)
 
 //Total JP Realisasi
 $total_jp_verified = 0;
-if ($idp->status == 2) {
+if ($idp->status == 3) {
     $total_jp_verified = $DB->get_field_sql("SELECT SUM(jumlah_jp_realisasi) 
                                               FROM {local_myidpebi_act} 
                                               WHERE idp_id = ? AND deleted = 0", [$idp_id]) ?: 0;
@@ -95,12 +95,16 @@ if ($delete_act && confirm_sesskey()) {
 
 
 // Validasi Hak Otorisasi "ATAU" (Pembimbing Terpilih ATAU Atasan Langsung Profil)
+$can_reset = has_capability('local/myidpebi:reset_idp', $PAGE->context);
 $is_pembimbing = ($USER->id == $idp->atasan_id);
 $is_atasan_langsung = (!empty($idp->atasan_langsung_id) && $USER->id == $idp->atasan_langsung_id);
 
 // 1. LOGIKA AKSI APPROVAL (Status 0 -> 1)
 if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
-    
+
+    $oldstatus = $idp->status; // Simpan status lama (0)
+    $newstatus = 1;            // Status baru (1)
+
     // Membuat objek bersih baru agar tidak bentrok dengan data query SQL ($idp)
     $upd = new stdClass();
     $upd->id = $idp_id;
@@ -110,7 +114,16 @@ if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lan
     
     $DB->update_record('local_myidpebi', $upd);
 
-    // Insert ke dalam log
+    //Insert ke dalam log IDP
+    local_myidpebi_add_log(
+        $idp_id,
+        $USER->id,
+        'approve_atasan',
+        $oldstatus,
+        $newstatus,
+        'Program IDP disetujui oleh Atasan/Pembimbing.');
+
+    // Insert ke dalam log Moodle
     $event = \local_myidpebi\event\idp_status_changed::create([
         'objectid' => $idp_id,
         'userid'   => $USER->id,
@@ -127,14 +140,26 @@ if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lan
 
 // 2. LOGIKA AKSI VERIFIKASI SELESAI (Status 1 -> 2)
 if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
-    
+
+    $oldstatus = $idp->status; // Simpan status lama
+    $newstatus = 2;            // Status baru 
+
     $upd = new stdClass();
     $upd->id = $idp_id;
-    $upd->status = 2; 
+    $upd->status = $newstatus; 
     $upd->verified_by = $USER->id;
     $upd->timeverified = time();
     
     $DB->update_record('local_myidpebi', $upd);
+
+    //Insert ke dalam log IDP
+    local_myidpebi_add_log(
+        $idp_id,
+        $USER->id,
+        'verifikasi_atasan',
+        $oldstatus,
+        $newstatus,
+        'Program IDP diverifikasi oleh Atasan.');
 
     // Insert ke dalam log
     $event = \local_myidpebi\event\idp_status_changed::create([
@@ -151,8 +176,46 @@ if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lang
     redirect($url, 'IDP telah diverifikasi selesai.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
+// 3. LOGIKA AKSI VERIFIKASI SELESAI OLEH LDC (Status 2 -> 3)
+if (optional_param('verify_ldc', 0, PARAM_INT) && ($can_reset) && confirm_sesskey()) {
+
+    $upd = new stdClass();
+    $upd->id = $idp_id;
+    $upd->status = 3; 
+    $upd->verified_ldc_by = $USER->id;
+    $upd->timeverified = time();
+    
+    $DB->update_record('local_myidpebi', $upd);
+
+    //Insert ke dalam log IDP
+    $oldstatus = $idp->status; // Simpan status lama
+    $newstatus = 3;            // Status baru 
+    local_myidpebi_add_log(
+        $idp_id,
+        $USER->id,
+        'verifikasi_ldc',
+        $oldstatus,
+        $newstatus,
+        'Program IDP diverifikasi  oleh LDC.');
+
+    // Insert ke dalam log
+    $event = \local_myidpebi\event\idp_status_changed::create([
+        'objectid' => $idp_id,
+        'userid'   => $USER->id,
+        'context'  => context_system::instance(),
+        'other'    => [
+            'status_code' => 3 
+        ]
+    ]);
+    $event->trigger();
+
+    // Redirect halaman
+    redirect($url, 'IDP telah diverifikasi selesai.', null, \core\output\notification::NOTIFY_SUCCESS);
+}
+
 // Setelah seluruh logika aksi aman dan tidak ada redirect yang dipicu, baru render header
 echo $OUTPUT->header();
+
 // ///ada update--
 
 
@@ -397,7 +460,7 @@ echo '  </tbody></table></div>';
 
 
 // =========================================================================
-// 🟢 LOGIKA TAMPILAN EVALUASI MANDIRI (SELF-ASSESSMENT)
+// LOGIKA TAMPILAN EVALUASI MANDIRI (SELF-ASSESSMENT)
 // =========================================================================
 $is_owner = ($USER->id == $idp->userid);
 echo '<div class="mt-4 p-3 border-top bg-light">';
@@ -433,10 +496,10 @@ if ((float)$idp->skor_efektivitas > 0) {
     echo '</div>';
 }
 echo '</div>';
+
 // =========================================================================
-
 // Tombol Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
-
+// =========================================================================
 if ($is_pembimbing || $is_atasan_langsung) {
     echo '<div class="mt-4 p-3 border-top bg-light">';
     
@@ -456,7 +519,7 @@ if ($is_pembimbing || $is_atasan_langsung) {
         echo '</div>';
 
     } else if ($idp->status == 1 && $idp->skor_efektivitas>= 1 ) {
-        // 🟢 PERBAIKAN: Ubah URL agar mengarah ke halaman form kuesioner assessment_atasan.php
+        // mengarah ke halaman form kuesioner assessment_atasan.php
         $verify_url = new moodle_url('/local/myidpebi/assessment_atasan.php', ['id' => $idp->id]);
         
         // Menggunakan alert-warning/alert-success untuk membedakan tahapan verifikasi penutupan dokumen
@@ -476,6 +539,42 @@ if ($is_pembimbing || $is_atasan_langsung) {
 }
 echo '</div></div>'; // Penutup card Aksi Atasan/Pembimbing Lintas Otorisasi dengan Konfirmasi
 
+// =========================================================================
+// Tombol Aksi LDC/HCM melakukan Verifikasi Akhir
+// =========================================================================
+// Cek capability untuk reset/penutupan langsung oleh LDC/Admin
+$can_reset = has_capability('local/myidpebi:reset_idp', $PAGE->context);
+
+if ($can_reset) {
+    echo '<div class="mt-4 p-3 border-top bg-light">';
+        $reset_page_url = new moodle_url('/local/myidpebi/admin_edit_idp.php', ['id' => $idp_id]);
+        
+        if ($idp->status == 2) {
+        echo '<div class="alert alert-secondary d-flex flex-column flex-md-row justify-content-between align-items-md-center shadow-sm mt-3 mb-0" role="alert">';
+        echo '    <div class="mb-3 mb-md-0 mr-md-3">';
+        echo '        <h5 class="alert-heading mb-1 text-dark"><i class="fa fa-shield mr-2"></i>Akses Khusus Admin / LDC</h5>';
+        echo '        <p class="mb-0 text-black">Gunakan fitur ini untuk verifikasi final LDC atau melakukan reset status IDP.</p>';
+        echo '    </div>';
+        echo '    <div class="text-nowrap d-flex gap-2">';
+        
+        // Tombol A: Verifikasi Akhir LDC (Hanya muncul jika status sudah diverifikasi atasan / Status 2)
+        
+            $set_status_3_url = new moodle_url($url, ['verify_ldc' => 1, 'sesskey' => sesskey()]);
+            $confirm_status_3 = "Apakah Anda yakin ingin memverifikasi/mengunci dokumen IDP ini?";
+            echo '        <a href="'.$set_status_3_url.'" class="btn btn-success text-white px-3 py-2 mr-2" onclick="return confirm(\''.$confirm_status_3.'\')"><i class="fa fa-check-circle mr-1"></i>Verifikasi Akhir</a>';
+            // Tombol B: Reset / Edit Admin (Mengarah ke admin_edit_idp.php)
+            echo '        <a href="'.$reset_page_url.'" class="btn btn-warning px-3 py-2"><i class="fa fa-refresh mr-1"></i>Reset / Edit Admin</a>';
+        
+            echo '    </div>';
+        echo '</div>';
+        }
+    
+    echo '</div>'; // Penutup bg-light
+}
+echo '</div></div>';
+
+
+
 // Menampilkan Riwayat Siapa yang melakukan klik persetujuan nyata (Audit Log UI)
 if ($idp->status > 0) {
     echo '<div class="mt-3 p-2 bg-light border rounded small">';
@@ -491,6 +590,46 @@ if ($idp->status > 0) {
         echo "  <div class='text-muted'>• Status [<strong>{$status2_info->text}</strong>] oleh: <strong>{$idp->vif_nik} - {$idp->vif_fname} {$idp->vif_lname}</strong></div>";
     }
     
+    echo '</div>';
+}
+
+// =========================================================================
+// TAMPILAN TIMELINE AUDIT LOG DARI TABEL local_myidpebi_log
+// =========================================================================
+$logs = $DB->get_records_sql("
+    SELECT l.*, u.firstname, u.lastname, u.username
+      FROM {local_myidpebi_log} l
+      JOIN {user} u ON u.id = l.actor_id
+     WHERE l.idp_id = :idpid
+  ORDER BY l.timecreated DESC
+", ['idpid' => $idp_id]);
+
+if ($logs) {
+    echo '<div class="mt-4 p-3 bg-light border rounded shadow-sm">';
+    echo '  <h6 class="text-secondary font-weight-bold mb-3"><i class="fa fa-history"></i> Riwayat & Timeline Aksi Status:</h6>';
+    echo '  <ul class="list-unstyled mb-0">';
+    
+    foreach ($logs as $log) {
+        $actorname = fullname($log) . ' (' . $log->username . ')';
+        $time = userdate($log->timecreated, '%d %b %Y, %H:%M');
+        $old_info = local_myidpebi_get_status_info($log->old_status);
+        $new_info = local_myidpebi_get_status_info($log->new_status);
+        
+        echo '  <li class="mb-2 pb-2 border-bottom">';
+        echo '      <div class="d-flex justify-content-between align-items-center">';
+        echo "          <span><strong>{$actorname}</strong> melakukan aksi <code>{$log->action_type}</code></span>";
+        echo "          <small class='text-muted'>{$time}</small>";
+        echo '      </div>';
+        echo "      <div class='small text-muted mt-1'>";
+        echo "          Perubahan Status: {$old_info->badge} <i class='fa fa-arrow-right mx-1'></i> {$new_info->badge}";
+        if (!empty($log->notes)) {
+            echo "<br><em>Catatan: \"{$log->notes}\"</em>";
+        }
+        echo '      </div>';
+        echo '  </li>';
+    }
+    
+    echo '  </ul>';
     echo '</div>';
 }
 

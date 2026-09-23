@@ -87,5 +87,21 @@
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
         </TABLE>
+        <TABLE NAME="local_myidpebi_log" COMMENT="Audit Trail Perubahan Status IDP">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="idp_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
+                <FIELD NAME="actor_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="ID User Moodle yang melakukan aksi"/>
+                <FIELD NAME="action_type" TYPE="char" LENGTH="50" NOTNULL="true" COMMENT="submit, approve_atasan, approve_ldc, reject_atasan, reject_ldc, verify_final"/>
+                <FIELD NAME="old_status" TYPE="int" LENGTH="3" NOTNULL="true"/>
+                <FIELD NAME="new_status" TYPE="int" LENGTH="3" NOTNULL="true"/>
+                <FIELD NAME="notes" TYPE="text" NOTNULL="false" COMMENT="Catatan/Alasan penolakan atau komentar persetujuan"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="fk_idp" TYPE="foreign" FIELDS="idp_id" REFTABLE="local_myidpebi" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
     </TABLES>
 </XMLDB>

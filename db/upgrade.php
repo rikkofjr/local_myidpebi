@@ -89,6 +89,35 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
         // Savepoint untuk versi 2026080400
         upgrade_plugin_savepoint(true, 2026091800, 'local', 'myidpebi');
     }
+    // =========================================================================
+    // penambahan table log
+    // =========================================================================
+    if ($oldversion < 2026092101) {
 
+        // Definisi tabel local_myidpebi_log.
+        $table = new xmldb_table('local_myidpebi_log');
+
+        // Menambahkan fields.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('idp_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('actor_id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('action_type', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('old_status', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('new_status', XMLDB_TYPE_INTEGER, '3', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('notes', XMLDB_TYPE_TEXT, null, null, null, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Menambahkan Primary Key dan Foreign Key.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+        $table->add_key('fk_idp', XMLDB_KEY_FOREIGN, ['idp_id'], 'local_myidpebi', ['id']);
+
+        // Eksekusi pembuatan tabel jika belum ada di DB.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Simpan titik versi upgrade myidpebi.
+        upgrade_plugin_savepoint(true, 2026092101, 'local', 'myidpebi');
+    }
     return true;
 }

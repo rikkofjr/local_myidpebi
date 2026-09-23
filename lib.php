@@ -45,24 +45,33 @@ function local_myidpebi_get_user_by_config($value) {
 
 /**
  * Fungsi Pusat untuk Definisi Status IDP
- * 0 = Menunggu (Pending)
+ * 0 = Menunggu Approval (Pending)
  * 1 = Disetujui / Dalam Proses (In Progress)
  * 2 = Selesai Diverifikasi (Verified)
+ * 3 = 
  */
 function local_myidpebi_get_status_info($statuscode) {
     $status = new stdClass();
 
     switch ($statuscode) {
         case 0:
-            $status->text = 'Menunggu Approval'; // Menunggu Approval Pembimbing/Atasan
+            $status->text = 'Draft / Pengajuan'; // Menunggu Approval Pembimbing/Atasan
+            $status->desc = 'Menunggu persetujuan rencana IDP dari Atasan Langsung';
             $status->class = 'badge-secondary'; // Abu-abu
             break;
         case 1:
-            $status->text = 'Disetujui / Proses'; //Disetujui Oleh Pembimbing/Atasan
+            $status->text = 'Disetujui / Berjalan'; 
+            $status->desc = 'Disetujui Oleh Atasan';
             $status->class = 'badge-warning'; // Kuning
             break;
         case 2:
-            $status->text = 'Selesai Diverifikasi'; //Diverivikasi Oleh Pembimbing/Atasan
+            $status->text = 'Diverifikasi Atasan'; //Diverivikasi Oleh Pembimbing/Atasan
+            $status->desc = 'Diverifikasi Oleh Atasan';
+            $status->class = 'badge-primary'; // Hijau
+            break;
+        case 3:
+            $status->text = 'Diverifikasi LDC'; 
+            $status->desc = 'Diverivikasi Oleh LDC';
             $status->class = 'badge-success'; // Hijau
             break;
         default:
@@ -212,4 +221,21 @@ function local_myidpebi_get_active_questions($type = 'karyawan') {
         ['q_type' => $type, 'is_active' => 1], 
         'q_sort ASC'
     );
+}
+/**
+ * Mencatat setiap perubahan status IDP ke tabel log audit.
+ */
+function local_myidpebi_add_log($idpid, $actorid, $actiontype, $oldstatus, $newstatus, $notes = '') {
+    global $DB;
+
+    $log = new stdClass();
+    $log->idp_id = $idpid;
+    $log->actor_id = $actorid;
+    $log->action_type = $actiontype;
+    $log->old_status = $oldstatus;
+    $log->new_status = $newstatus;
+    $log->notes = $notes;
+    $log->timecreated = time();
+
+    return $DB->insert_record('local_myidpebi_log', $log);
 }

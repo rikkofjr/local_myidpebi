@@ -108,6 +108,28 @@ if ($data = $mform->get_data()) {
     // Eksekusi update data ke database Moodle
     $DB->update_record('local_myidpebi', $update_idp);
 
+    //Insert ke dalam log IDP
+    $oldstatus = $idp->status; // Simpan status lama (0)
+    $newstatus = 2;            // Status baru (1)
+    local_myidpebi_add_log(
+        $idp_id,
+        $USER->id,
+        'verifikasi_atasan',
+        $oldstatus,
+        $newstatus,
+        'IDP ini telah di verifikasi Atasan.');
+
+    // Insert ke dalam log
+    $event = \local_myidpebi\event\idp_status_changed::create([
+        'objectid' => $idp_id,
+        'userid'   => $USER->id,
+        'context'  => context_system::instance(),
+        'other'    => [
+            'status_code' => $newstatus 
+        ]
+    ]);
+    $event->trigger();
+
     // Kembalikan ke halaman rincian dengan notifikasi sukses
     redirect(new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]), 'Penilaian efektivitas berhasil disimpan dan dokumen IDP resmi ditutup (Tuntas).', null, \core\output\notification::NOTIFY_SUCCESS);
 }
