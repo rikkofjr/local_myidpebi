@@ -55,3 +55,7 @@ Agar plugin dapat mengidentifikasi struktur organisasi dan atasan langsung secar
 * **Fitur Duplikasi:** Penambahan fitur duplikasi aktivitas oleh karyawan untuk mempercepat proses input rencana berulang.
 * **Database Audit Trail:** Implementasi tabel log terpisah untuk mencatat riwayat perubahan data (*audit trail*) pada formulir rencana pengembangan diri.
 * **Alur Validasi JP:** Integrasi logika tampilan Jam Pelajaran (JP) yang terkunci sebelum dokumen bukti fisik diverifikasi oleh pembimbing.
+
+### [v1.5]
+* **Verifikasi oleh admin / ldc:** Penambahan fitur verifikasi akhir yang dilakukan user dengan permission 
+* **Penambahan Log:** Detail aktifitas yang melakukan approval, verifikasi ataupun reset tercatat.
