@@ -14,6 +14,7 @@
                 <FIELD NAME="approved_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang menyetujui program"/>
                 <FIELD NAME="verified_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas"/>
                 <FIELD NAME="verified_ldc_by" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" COMMENT="ID User yang memverifikasi tuntas (dari LDC/HR)"/>
+                <FIELD NAME="total_jp_verified" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="true" DEFAULT="0.00" SEQUENCE="false" COMMENT="Total JP jika sudah terverifikasi Akhir"/>
 
                 <FIELD NAME="resume_kapabilitas" TYPE="text"  NOTNULL="false"  COMMENT="Resume Kapabilitas Karyawan"/>
                 <FIELD NAME="tuntutan_sekarang_performance" TYPE="text"  NOTNULL="false"  COMMENT="Tuntutan Sekarang (Performance)"/>
@@ -34,6 +35,12 @@
             <KEYS>
                 <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
             </KEYS>
+            <INDEXES>
+                <!-- INDEXING UNTUK PERFORMA MONITORING/ADMIN -->
+                <INDEX NAME="userid_idx" UNIQUE="false" FIELDS="userid"/>
+                <INDEX NAME="status_idx" UNIQUE="false" FIELDS="status"/>
+                <INDEX NAME="user_status_idx" UNIQUE="false" FIELDS="userid, status"/>
+            </INDEXES>
         </TABLE>
 
         <TABLE NAME="local_myidpebi_act" COMMENT="Rincian Aktivitas IDP">

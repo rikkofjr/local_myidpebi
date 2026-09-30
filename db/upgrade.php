@@ -119,5 +119,51 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
         // Simpan titik versi upgrade myidpebi.
         upgrade_plugin_savepoint(true, 2026092101, 'local', 'myidpebi');
     }
+    // Upgrade ke versi 2026092300 (penambahan JP verified untuk menghitung total JP yang terverifikasi LDC)
+    if ($oldversion < 2026092302) {
+
+        // 1. Tambah Kolom total_jp_verified
+        $table = new xmldb_table('local_myidpebi');
+        $field = new xmldb_field(
+            'total_jp_verified', 
+            XMLDB_TYPE_NUMBER, 
+            '10',                // Length
+            '2',                 // Decimals
+            XMLDB_NOTNULL, 
+            null, 
+            '0.00', 
+            'verified_ldc_by'    // Letakkan setelah verified_ldc_by
+        );
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // 2. Tambah Index pada kolom status untuk query monitoring cepat
+        $index = new xmldb_index('status_idx', XMLDB_INDEX_NOTUNIQUE, ['status']);
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $index_user_status = new xmldb_index('user_status_idx', XMLDB_INDEX_NOTUNIQUE, ['userid', 'status']);
+        if (!$dbman->index_exists($table, $index_user_status)) {
+            $dbman->add_index($table, $index_user_status);
+        }
+
+        // 3. Backfill Data Lama (Menggunakan jumlah_jp_realisasi)
+        $sql = "
+            UPDATE {local_myidpebi} i
+               SET i.total_jp_verified = COALESCE((
+                   SELECT SUM(a.jumlah_jp_realisasi)
+                     FROM {local_myidpebi_act} a
+                    WHERE a.idp_id = i.id AND a.deleted = 0
+               ), 0.00)
+             WHERE i.status >= 3
+        ";
+        $DB->execute($sql);
+
+        // Savepoint reached.
+        upgrade_plugin_savepoint(true, 2026092302, 'local', 'myidpebi');
+    }
     return true;
 }

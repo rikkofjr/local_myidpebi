@@ -92,8 +92,7 @@ if (!empty($org_filter)) {
 
 // Kalibrasi select data utama beserta kalkulasi JP menggunakan JOIN adaptif
 $sql_select = "SELECT i.*, u.username as nik, u.firstname, u.lastname, 
-                      atasan.firstname as atasan_fn, atasan.lastname as atasan_ln,
-                      (SELECT SUM(jumlah_jp_realisasi) FROM {local_myidpebi_act} WHERE idp_id = i.id AND deleted = 0) as total_jp
+                      atasan.firstname as atasan_fn, atasan.lastname as atasan_ln
                FROM {local_myidpebi} i
                JOIN {user} u ON i.userid = u.id
                JOIN {user} atasan ON i.atasan_id = atasan.id
@@ -154,9 +153,9 @@ if (!empty($records)) {
         echo "  <td>" . s($idp->nama_idp) . $lock_icon . "</td>";
         echo "  <td>" . s($idp->atasan_fn . ' ' . $idp->atasan_ln) . "</td>";
         echo "  <td>" . $status_info->badge . "</td>";
-        echo "  <td><strong>" . ($idp->status == 2 ? ($idp->total_jp ?: 0) : '-') . "</strong></td>";
-        echo "  <td>" . number_format($idp->skor_efektivitas, 2) . "%</td>";
-        echo "  <td>" . number_format($idp->skor_atasan, 2) . "%</td>";
+        echo "  <td><strong>" . number_format($idp->total_jp_verified) . "</strong></td>";
+        echo "  <td>" . number_format($idp->skor_efektivitas, 2) . "</td>";
+        echo "  <td>" . number_format($idp->skor_atasan, 2) . "</td>";
         echo "  <td class='text-center'>";
         echo "      <a href='{$view_url}' class='btn btn-sm btn-info mr-1' title='Lihat Rincian'><i class='fa fa-eye'></i></a>";
         echo "      <a href='{$edit_url}' class='btn btn-sm btn-danger' title='Reset Emergency'><i class='fa fa-refresh'></i></a>";

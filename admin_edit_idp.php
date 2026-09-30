@@ -46,6 +46,7 @@ if (optional_param('action', '', PARAM_ALPHA) === 'confirmreset' && confirm_sess
     $reset_data->approved_by         = 0;
     $reset_data->verified_by         = 0;
     $reset_data->verified_ldc_by     = 0;
+    $reset_data->total_jp_verified     = 0.00;
     $reset_data->skor_efektivitas    = 0.00;
     $reset_data->skor_atasan         = 0.00;
     $reset_data->kesimpulan_karyawan = null;
@@ -55,7 +56,7 @@ if (optional_param('action', '', PARAM_ALPHA) === 'confirmreset' && confirm_sess
 
     $DB->update_record('local_myidpebi', $reset_data);
 
-    // 2. 🟢 CATAT KE TABEL LOG IDP (Sertakan alasan dari modal/form)
+    // 2. CATAT KE TABEL LOG IDP (Sertakan alasan dari modal/form)
     local_myidpebi_add_log(
         $idp->id,
         $USER->id,
@@ -65,7 +66,7 @@ if (optional_param('action', '', PARAM_ALPHA) === 'confirmreset' && confirm_sess
         $notes
     );
 
-    // 3. 🟢 CATAT KE MOODLE SYSTEM EVENT LOG
+    // 3. CATAT KE MOODLE SYSTEM EVENT LOG
     $event = \local_myidpebi\event\idp_status_changed::create([
         'objectid' => $idp->id,
         'userid'   => $USER->id,
@@ -95,10 +96,11 @@ echo '      <div class="card shadow-sm mb-4">';
 echo '          <div class="card-header bg-dark"><h5 class="text-white"><i class="fa fa-info-circle"></i> Detail Dokumen IDP Karyawan</h5></div>';
 echo '          <div class="card-body">';
 echo '              <table class="table table-hover table-striped">';
-echo '                  <tr><th>Nama Program</th><td><strong>' . s($idp->nama_idp) . '</strong></td></tr>';
+echo '                  <tr><th>Nama Program</th><td><strong><a href="/local/myidpebi/view_details.php?id='.s($idp->id).'"> '. s($idp->nama_idp) . '</a></strong></td></tr>';
 echo '                  <tr><th>Pemilik / Karyawan</th><td>' . s($karyawan->firstname . ' ' . $karyawan->lastname) . ' (' . s($karyawan->username) . ')</td></tr>';
 echo '                  <tr><th>Email Karyawan</th><td>' . s($karyawan->email) . '</td></tr>';
 echo '                  <tr><th>Periode IDP</th><td>' . userdate($idp->mulai_date, '%d %B %Y') . ' s/d ' . userdate($idp->akhir_date, '%d %B %Y') . '</td></tr>';
+echo '                  <tr><th>Tanggal pengajuan IDP</th><td>' . userdate($idp->timecreated, '%d %B %Y').'</td></tr>';
 echo '                  <tr>';
 echo '                      <th>Status Dokumen</th>';
 echo '                      <td>';
@@ -111,19 +113,27 @@ echo '          </div>';
 echo '      </div>';
 
 echo '      <div class="card shadow-sm mb-4">';
-echo '          <div class="card-header bg-info text-white"><h5><i class="fa fa-calculator"></i> Data Evaluasi Nilai Saat Ini (Akan Dihapus)</h5></div>';
+echo '          <div class="card-header bg-info text-white"><h5><i class="fa fa-calculator"></i> Data Saat Ini (Akan Dihapus)</h5></div>';
 echo '          <div class="card-body">';
 echo '              <div class="row text-center">';
+echo '               <div class="col-md-12">';
+echo '                  <div class="border rounded p-3 bg-light">';
+echo '                    <h6>JP Terverifikasi</h6>';
+echo '                    <h3 class="text-primary">' . number_format($idp->total_jp_verified, 2) . '</h3>';
+echo '                  </div>';
+echo '                </div> ';
+echo '              </div>';
+echo '              <div class="row text-center mt-2">';
 echo '                  <div class="col-md-6">';
 echo '                      <div class="border rounded p-3 bg-light">';
 echo '                          <h6>Skor Mandiri Karyawan</h6>';
-echo '                          <h3 class="text-primary">' . number_format($idp->skor_efektivitas, 2) . '%</h3>';
+echo '                          <h3 class="text-primary">' . number_format($idp->skor_efektivitas, 2) . '</h3>';
 echo '                      </div>';
 echo '                  </div>';
 echo '                  <div class="col-md-6">';
 echo '                      <div class="border rounded p-3 bg-light">';
 echo '                          <h6>Skor Penilaian Atasan</h6>';
-echo '                          <h3 class="text-success">' . number_format($idp->skor_atasan, 2) . '%</h3>';
+echo '                          <h3 class="text-success">' . number_format($idp->skor_atasan, 2) . '</h3>';
 echo '                      </div>';
 echo '                  </div>';
 echo '              </div>';

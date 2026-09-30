@@ -239,3 +239,29 @@ function local_myidpebi_add_log($idpid, $actorid, $actiontype, $oldstatus, $news
 
     return $DB->insert_record('local_myidpebi_log', $log);
 }
+/**
+ * Menghitung ulang dan memperbarui kolom cache total_jp_verified pada tabel local_myidpebi.
+ *
+ * @param int $idp_id ID Dokumen IDP.
+ * @return void
+ */
+function local_myidpebi_recalculate_verified_jp(int $idp_id): void {
+    global $DB;
+
+    $idp = $DB->get_record('local_myidpebi', ['id' => $idp_id], 'id, status', MUST_EXIST);
+
+    // Jika status < 3, maka JP terverifikasi dianggap 0
+    if ((int)$idp->status < 3) {
+        $DB->set_field('local_myidpebi', 'total_jp_verified', 0.00, ['id' => $idp_id]);
+        return;
+    }
+
+    // Jika status >= 3, hitung total sum JP dari tabel aktivitas
+    $total_jp = $DB->get_field_sql("
+        SELECT COALESCE(SUM(jumlah_jp_realisasi), 0)
+          FROM {local_myidpebi_act}
+         WHERE idp_id = :idpid
+    ", ['idpid' => $idp_id]);
+
+    $DB->set_field('local_myidpebi', 'total_jp_verified', $total_jp, ['id' => $idp_id]);
+}

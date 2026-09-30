@@ -82,7 +82,7 @@ if ($records) {
         echo "<td>{$idp->firstname}</td>";
         echo "<td>".userdate($idp->mulai_date, '%d %b %y')."</td>";
         echo "<td>".userdate($idp->akhir_date, '%d %b %y')."</td>";
-        echo "<td>{$display_jp}</td>";
+        echo "<td>{$idp->total_jp_verified}</td>";
         
         // 🟢 SINKRONISASI TOTAL: Menggunakan properti badge dari lib.php secara utuh
         echo "<td>".$status_info->badge."</td>";
