@@ -55,23 +55,24 @@ function local_myidpebi_get_status_info($statuscode) {
 
     switch ($statuscode) {
         case 0:
-            $status->text = 'Draft / Pengajuan'; // Menunggu Approval Pembimbing/Atasan
-            $status->desc = 'Menunggu persetujuan rencana IDP dari Atasan Langsung';
+            // $status->text = 'Draft / Pengajuan'; // Menunggu Approval Pembimbing/Atasan
+            $status->text = get_string('myidpebi:badge_status0', 'local_myidpebi'); // Menunggu Approval Pembimbing/Atasan
+            $status->desc = get_string('myidpebi:desc_status0', 'local_myidpebi');
             $status->class = 'badge-secondary'; // Abu-abu
             break;
         case 1:
-            $status->text = 'Disetujui / Berjalan'; 
-            $status->desc = 'Disetujui Oleh Atasan';
+            $status->text = get_string('myidpebi:badge_status1', 'local_myidpebi'); 
+            $status->desc = get_string('myidpebi:badge_status1', 'local_myidpebi');
             $status->class = 'badge-warning'; // Kuning
             break;
         case 2:
-            $status->text = 'Diverifikasi Atasan'; //Diverivikasi Oleh Pembimbing/Atasan
-            $status->desc = 'Diverifikasi Oleh Atasan';
+            $status->text = get_string('myidpebi:badge_status2', 'local_myidpebi'); 
+            $status->desc = get_string('myidpebi:badge_status2', 'local_myidpebi');
             $status->class = 'badge-primary'; // Hijau
             break;
         case 3:
-            $status->text = 'Diverifikasi LDC'; 
-            $status->desc = 'Diverivikasi Oleh LDC';
+            $status->text = get_string('myidpebi:badge_status3', 'local_myidpebi'); 
+            $status->desc = get_string('myidpebi:badge_status3', 'local_myidpebi');
             $status->class = 'badge-success'; // Hijau
             break;
         default:

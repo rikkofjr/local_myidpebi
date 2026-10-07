@@ -4,27 +4,31 @@ require_once(__DIR__ . '/lib.php');
 
 global $DB, $USER, $PAGE, $OUTPUT;
 
-// 1. PROTEKSI AKSES: Admin atau Manager (has_capability viewreports)
+// 1. PROTEKSI AKSES: Admin atau Manager
 require_login();
 $context = context_system::instance();
 
-if (!is_siteadmin() && !has_capability('moodle/site:viewreports', $context)) {
+if (!is_siteadmin() && !has_capability('local/myidpebi:reset_idp', $context)) {
     throw new moodle_exception('nopermissiontoaccesspage', 'error');
 }
 
-// 2. Inisialisasi Parameter Filter
+// 2. INISIALISASI PARAMETER FILTER
 $page_num      = optional_param('page', 0, PARAM_INT);
 $per_page      = 30; 
 $search        = optional_param('search', '', PARAM_TEXT);
 $status_filter = optional_param('status_filter', -1, PARAM_INT);
+$org_filter    = optional_param('org_filter', '', PARAM_TEXT);
 
-// 🟢 BARU: Tangkap parameter filter organisasi dinamis
-$org_filter    = optional_param('org_filter', '', PARAM_TEXT); 
+// 🟢 TANGKAP PARAMETER FILTER TANGGAL
+$date_from     = optional_param('date_from', '', PARAM_TEXT); // YYYY-MM-DD
+$date_to       = optional_param('date_to', '', PARAM_TEXT);   // YYYY-MM-DD
 
 $url = new moodle_url('/local/myidpebi/admin_monitor.php');
 if ($search) $url->param('search', $search);
 if ($status_filter !== -1) $url->param('status_filter', $status_filter);
 if ($org_filter) $url->param('org_filter', $org_filter);
+if ($date_from) $url->param('date_from', $date_from);
+if ($date_to) $url->param('date_to', $date_to);
 
 $PAGE->set_url($url);
 $PAGE->set_context($context);
@@ -35,15 +39,15 @@ $PAGE->set_heading('Panel Kontrol Administrator IDP');
 $PAGE->navbar->add('Admin Panel', new moodle_url('/local/myidpebi/admin_panel.php'));
 $PAGE->navbar->add('Monitoring IDP', $url);
 
-// 🟢 3. MEMBACA KONFIGURASI ADAPTIF (Berdasarkan Gambar UI Settings Anda)
-$sumber_org = get_config('local_myidpebi', 'sumber_field_organisasi'); // 'user_table' atau 'custom_profile'
-$field_org  = get_config('local_myidpebi', 'profile_field_organisasi'); // e.g., 'department' atau 'nama_divisi'
+// 3. MEMBACA KONFIGURASI ADAPTIF ORGANISASI
+$sumber_org = get_config('local_myidpebi', 'sumber_field_organisasi');
+$field_org  = get_config('local_myidpebi', 'profile_field_organisasi');
 
 if (empty($sumber_org)) { $sumber_org = 'user_table'; }
 if (empty($field_org)) { $field_org = 'department'; }
 
-// 🟢 4. QUERY MENGAMBIL DAFTAR OPSIDROP DOWN FILTER SECARA UNIK (DISTINCT)
-$org_options = ['' => ' All'];
+// 4. QUERY DROPDOWN FILTER ORGANISASI
+$org_options = ['' => '— Semua Organisasi —'];
 if ($sumber_org === 'user_table') {
     $sql_opsi = "SELECT DISTINCT $field_org FROM {user} WHERE deleted = 0 AND $field_org IS NOT NULL AND $field_org != '' ORDER BY $field_org ASC";
     if ($records_opsi = $DB->get_fieldset_sql($sql_opsi)) {
@@ -58,7 +62,7 @@ if ($sumber_org === 'user_table') {
     }
 }
 
-// 5. MEMBANGUN QUERY UTAMA (DENGAN PENYARINGAN KOMPLEKS)
+// 5. MEMBANGUN QUERY UTAMA (KLAUSA WHERE)
 $params = [];
 $whereClause = "WHERE u.deleted = 0";
 
@@ -75,7 +79,26 @@ if (!empty($search)) {
     $params['search4'] = '%'.$search.'%';
 }
 
-// 🟢 6. LOGIKA FILTER SQL BERDASARKAN PARAMETER DINAMIS YANG DIPILIH
+// 🟢 FILTER TANGGAL (TIMECREATED RANGE)
+if (!empty($date_from)) {
+    // Set ke jam 00:00:00 hari tersebut
+    $time_from = strtotime($date_from . ' 00:00:00');
+    if ($time_from !== false) {
+        $whereClause .= " AND i.timecreated >= :time_from";
+        $params['time_from'] = $time_from;
+    }
+}
+
+if (!empty($date_to)) {
+    // Set ke jam 23:59:59 akhir hari tersebut
+    $time_to = strtotime($date_to . ' 23:59:59');
+    if ($time_to !== false) {
+        $whereClause .= " AND i.timecreated <= :time_to";
+        $params['time_to'] = $time_to;
+    }
+}
+
+// 6. LOGIKA FILTER ORGANISASI
 $join_org = "";
 if (!empty($org_filter)) {
     if ($sumber_org === 'user_table') {
@@ -90,7 +113,7 @@ if (!empty($org_filter)) {
     }
 }
 
-// Kalibrasi select data utama beserta kalkulasi JP menggunakan JOIN adaptif
+// EXECUTE QUERY UTAMA
 $sql_select = "SELECT i.*, u.username as nik, u.firstname, u.lastname, 
                       atasan.firstname as atasan_fn, atasan.lastname as atasan_ln
                FROM {local_myidpebi} i
@@ -103,31 +126,53 @@ $sql_select = "SELECT i.*, u.username as nik, u.firstname, u.lastname,
 $total_records = $DB->count_records_sql("SELECT COUNT(*) FROM {local_myidpebi} i JOIN {user} u ON i.userid = u.id $join_org $whereClause", $params);
 $records = $DB->get_records_sql($sql_select, $params, $page_num * $per_page, $per_page);
 
-// 7. MEMULAI OUTPUT HEADERS
+
+// 7. OUTPUT UI HEADERS & FILTER PANEL
 echo $OUTPUT->header();
+echo '<div class="container">';
+echo '  <div class="row justify-content-end border-0 shadow-sm rounded-lg  p-3 mb-4 bg-light">';
+echo '      <div class="col-md-3">';
+echo '          <div class="">';
+echo '              <a href="/local/myidpebi/admin_panel.php" class="btn btn-dark mb-2"><i class="fa fa-dashboard"></i> Panel Utama</a>';
+echo '          </div>';
+echo '      </div>';
+echo '  </div>';
+echo '</div>';
+
 echo '<div class="container-fluid mt-2">';
 
-// --- PANEL BAR PENCARIAN & FILTER ---
 echo '<div class="card bg-light mb-3 shadow-sm"><div class="card-body">';
+echo '<h5>Filter</h5>';
 echo '<form method="GET" action="'.$PAGE->url.'" class="form-inline d-flex flex-wrap justify-content-between">';
 
 echo '  <div class="d-flex flex-wrap align-items-center">';
-// Pencarian Textbox
+// Input Search
 echo '      <input type="text" name="search" class="form-control mr-2 mb-2" placeholder="Cari NIK, Nama, Judul IDP..." value="'.s($search).'">';
 
-// Dropdown Filter Status
-$status_options = [-1 => '— Semua Status —', 0 => 'Menunggu Approval', 1 => 'Disetujui / Proses', 2 => 'Selesai Diverifikasi'];
+// Dropdown Status
+$status_options = [
+    -1 => '— Semua Status —', 
+    0 => get_string('myidpebi:badge_status0', 'local_myidpebi'), 
+    1 => get_string('myidpebi:badge_status1', 'local_myidpebi'), 
+    2 => get_string('myidpebi:badge_status2', 'local_myidpebi'), 
+    3 => get_string('myidpebi:badge_status3', 'local_myidpebi')
+];
 echo html_writer::select($status_options, 'status_filter', $status_filter, false, ['class' => 'form-control mr-2 mb-2']);
 
-// 🟢 BARU: Dropdown Filter Organisasi Dinamis Hasil Distinct Database
+// Dropdown Organisasi
 echo html_writer::select($org_options, 'org_filter', $org_filter, false, ['class' => 'form-control mr-2 mb-2']);
+
+// 🟢 INPUT FILTER TANGGAL (HTML5 Date Input)
+echo '      <div class="input-group mr-2 mb-2">';
+echo '          <div class="p-1">Tanggal Pembuatan &nbsp;</div>';
+echo '          <input type="date" name="date_from" class="form-control" title="Dari Tanggal" value="'.s($date_from).'">';
+echo '              <div class="p-1">&nbsp s/d &nbsp;</div>';
+echo '          <input type="date" name="date_to" class="form-control" title="Sampai Tanggal" value="'.s($date_to).'">';
+echo '      </div>';
 
 echo '      <button type="submit" class="btn btn-primary mb-2 mr-1"><i class="fa fa-search"></i> Filter</button>';
 echo '      <a href="/local/myidpebi/admin_monitor.php" class="btn btn-secondary mb-2">Reset</a>';
 echo '  </div>';
-
-// Tombol Kembali ke Admin Hub Panel
-echo '  <a href="/local/myidpebi/admin_panel.php" class="btn btn-dark mb-2"><i class="fa fa-dashboard"></i> Panel Utama</a>';
 echo '</form>';
 echo '</div></div>';
 
@@ -137,7 +182,7 @@ if (!empty($records)) {
     echo '<table class="table table-bordered table-striped table-hover mb-0">';
     echo '  <thead class="thead-dark"><tr>';
     echo '      <th>NIK Karyawan</th><th>Nama Karyawan</th><th>Nama Program IDP</th>';
-    echo '      <th>Pembimbing / Atasan</th><th>Status Alur</th><th>Total JP</th>';
+    echo '      <th>Pembimbing / Atasan</th><th>Tgl Dibuat</th><th>Status Alur</th><th>Total JP</th>';
     echo '      <th>Skor Mandiri</th><th>Skor Atasan</th><th class="text-center">Aksi Kendali</th>';
     echo '  </tr></thead><tbody>';
 
@@ -145,13 +190,14 @@ if (!empty($records)) {
         $status_info = local_myidpebi_get_status_info($idp->status);
         $view_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp->id]);
         $edit_url = new moodle_url('/local/myidpebi/admin_edit_idp.php', ['id' => $idp->id]);
-        $lock_icon = ($idp->status == 2) ? ' <i class="fa fa-lock text-muted" title="Data Terkunci"></i>' : '';
+        $lock_icon = ($idp->status == 2 || $idp->status == 3) ? ' <i class="fa fa-lock text-muted" title="Data Terkunci"></i>' : '';
 
         echo '<tr>';
         echo "  <td>" . s($idp->nik) . "</td>";
         echo "  <td><strong>" . s($idp->firstname . ' ' . $idp->lastname) . "</strong></td>";
         echo "  <td>" . s($idp->nama_idp) . $lock_icon . "</td>";
         echo "  <td>" . s($idp->atasan_fn . ' ' . $idp->atasan_ln) . "</td>";
+        echo "  <td>" . userdate($idp->timecreated, '%d %b %Y') . "</td>"; // 🟢 Kolom tanggal pembuatan
         echo "  <td>" . $status_info->badge . "</td>";
         echo "  <td><strong>" . number_format($idp->total_jp_verified) . "</strong></td>";
         echo "  <td>" . number_format($idp->skor_efektivitas, 2) . "</td>";
@@ -168,7 +214,7 @@ if (!empty($records)) {
 }
 echo '</div></div>';
 
-// --- PAGINATION FOOTER ---
+// PAGINATION FOOTER
 echo '<div class="mt-3">';
 echo $OUTPUT->paging_bar($total_records, $page_num, $per_page, $PAGE->url);
 echo '</div>';

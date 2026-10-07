@@ -17,7 +17,7 @@ if (!$idp_id) {
 $shortname_config = get_config('local_myidpebi', 'profile_field_atasan');
 $profile_field_shortname = !empty($shortname_config) ? $shortname_config : 'atasan_langsung';
 
-// 🟢 FIX 1: Whitelist sanitasi field target untuk mencegah SQL Injection
+// FIX 1: Whitelist sanitasi field target untuk mencegah SQL Injection
 $identity_config = get_config('local_myidpebi', 'identity_field_atasan');
 $allowed_fields = ['username', 'email', 'idnumber', 'id'];
 $field_target = in_array($identity_config, $allowed_fields) ? $identity_config : 'username';
@@ -101,7 +101,8 @@ if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lan
     
     $DB->update_record('local_myidpebi', $upd);
 
-    local_myidpebi_add_log($idp_id, $USER->id, 'approve_atasan', $oldstatus, $newstatus, 'Program IDP disetujui oleh Atasan/Pembimbing.');
+    //input ke dalam log
+    local_myidpebi_add_log($idp_id, $USER->id, get_string('myidpebi:actiontype_status1','local_myidpebi'), $oldstatus, $newstatus, get_string('myidpebi:desc_status1','local_myidpebi'));
 
     $event = \local_myidpebi\event\idp_status_changed::create([
         'objectid' => $idp_id,
@@ -114,7 +115,7 @@ if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lan
     redirect($url, 'IDP telah disetujui.', null, \core\output\notification::NOTIFY_SUCCESS);
 }
 
-// 2. LOGIKA AKSI VERIFIKASI SELESAI (Status 1 -> 2)
+// 2. LOGIKA AKSI VERIFIKASI atasan (Status 1 -> 2)
 if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
 
     $oldstatus = $idp->status;
@@ -128,7 +129,7 @@ if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lang
     
     $DB->update_record('local_myidpebi', $upd);
 
-    local_myidpebi_add_log($idp_id, $USER->id, 'verifikasi_atasan', $oldstatus, $newstatus, 'Program IDP diverifikasi oleh Atasan.');
+    local_myidpebi_add_log($idp_id, $USER->id, 'verifikasi_atasan_1_ke_2', $oldstatus, $newstatus, 'Program IDP diverifikasi oleh Atasan.');
 
     $event = \local_myidpebi\event\idp_status_changed::create([
         'objectid' => $idp_id,
@@ -161,7 +162,7 @@ if (optional_param('verify_ldc', 0, PARAM_INT) && ($can_reset) && confirm_sesske
 
     $oldstatus = $idp->status;
     $newstatus = 3; 
-    local_myidpebi_add_log($idp_id, $USER->id, 'verifikasi_ldc', $oldstatus, $newstatus, 'Program IDP diverifikasi oleh LDC.');
+    local_myidpebi_add_log($idp_id, $USER->id, get_string('myidpebi:actiontype_status3', 'local_myidpebi'), $oldstatus, $newstatus, get_string('myidpebi:desc_status3', 'local_myidpebi'));
 
     $event = \local_myidpebi\event\idp_status_changed::create([
         'objectid' => $idp_id,
@@ -227,10 +228,10 @@ echo '            <div class="text-center position-relative mb-3 mb-md-0" style=
 echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step1.'; color: '.$color_step1.';">';
 echo '                    <i class="fa '.$icon_step1.' fa-lg"></i>';
 echo '                </div>';
-echo '                <h6 class="mt-2 mb-1 '.$class_step1.'">1. Perencanaan</h6>';
+echo '                <h6 class="mt-2 mb-1 '.$class_step1.'">1. '.get_string('myidpebi:badge_status0', 'local_myidpebi').'</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status == 0) {
-    echo '                    <span class="text-warning font-weight-bold">Buat aktivitas:</span><br>Jika OK, ajukan ke Atasan.';
+    echo '                    <span class="text-warning font-weight-bold">Lakukan pengisian rincian aktivitas:</span><br>Jika sudah benar, ajukan ke Atasan untuk meminta persetujuan.';
 } else {
     echo '                    Rencana IDP disetujui Atasan.';
 }
@@ -242,12 +243,12 @@ echo '            <div class="text-center position-relative mb-3 mb-md-0" style=
 echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step2.'; color: '.$color_step2.'; border-color: '.$border_step2.';">';
 echo '                    <i class="fa '.$icon_step2.' fa-lg"></i>';
 echo '                </div>';
-echo '                <h6 class="mt-2 mb-1 '.$class_step2.'">2. Realisasi & JP</h6>';
+echo '                <h6 class="mt-2 mb-1 '.$class_step2.'">2. '.get_string('myidpebi:badge_status1', 'local_myidpebi').'</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status == 0) {
     echo '                    Terbuka setelah Rencana disetujui.';
 } else if ($idp->status == 1) {
-    echo '                    <span class="text-warning font-weight-bold">Isi JP & Evidence:</span><br>Lakukan self assessment.';
+    echo '                    <span class="text-warning font-weight-bold">lakukan pengisian JP & Evidence</span><br>setelah dirasa sesuai, lakukan self assessment.';
 } else {
     echo '                    Realisasi telah diselesaikan.';
 }
@@ -259,7 +260,7 @@ echo '            <div class="text-center position-relative mb-3 mb-md-0" style=
 echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step3.'; color: '.$color_step3.'; border-color: '.$border_step3.';">';
 echo '                    <i class="fa '.$icon_step3.' fa-lg"></i>';
 echo '                </div>';
-echo '                <h6 class="mt-2 mb-1 '.$class_step3.'">3. Verifikasi Atasan</h6>';
+echo '                <h6 class="mt-2 mb-1 '.$class_step3.'">3. '.get_string('myidpebi:badge_status2', 'local_myidpebi').'</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status < 2) {
     echo '                    Menunggu penyelesaian Realisasi.';
@@ -276,10 +277,10 @@ echo '            <div class="text-center position-relative" style="z-index: 2; 
 echo '                <div class="rounded-circle d-inline-flex align-items-center justify-content-center border border-2 shadow-sm" style="width: 50px; height: 50px; background-color: '.$bg_step4.'; color: '.$color_step4.'; border-color: '.$border_step4.';">';
 echo '                    <i class="fa fa-trophy fa-lg"></i>';
 echo '                </div>';
-echo '                <h6 class="mt-2 mb-1 '.$class_step4.'">4. Verifikasi LDC</h6>';
+echo '                <h6 class="mt-2 mb-1 '.$class_step4.'">4. '.get_string('myidpebi:badge_status3', 'local_myidpebi').'</h6>';
 echo '                <small class="text-muted d-block" style="line-height: 1.2; font-size: 11px;">';
 if ($idp->status < 3) {
-    echo '                    Kunci pasif.';
+    echo '                    .';
 } else {
     echo '                    <span class="text-success font-weight-bold"><i class="fa fa-lock"></i> Selesai:</span><br>Dokumen terverifikasi penuh & terkunci.';
 }

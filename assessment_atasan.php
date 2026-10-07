@@ -114,7 +114,7 @@ if ($data = $mform->get_data()) {
     local_myidpebi_add_log(
         $idp_id,
         $USER->id,
-        'verifikasi_atasan',
+        get_string('myidpebi:actiontype_status2','local_myidpebi'),
         $oldstatus,
         $newstatus,
         'IDP ini telah di verifikasi Atasan.');
