@@ -116,31 +116,32 @@ if (optional_param('approve', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_lan
 }
 
 // 2. LOGIKA AKSI VERIFIKASI atasan (Status 1 -> 2)
-if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
+// verifikasi oleh atasan dilakukan dengan cara mengisi kuesioner
+// if (optional_param('verify', 0, PARAM_INT) && ($is_pembimbing || $is_atasan_langsung) && confirm_sesskey()) {
 
-    $oldstatus = $idp->status;
-    $newstatus = 2;
+//     $oldstatus = $idp->status;
+//     $newstatus = 2;
 
-    $upd = new stdClass();
-    $upd->id = $idp_id;
-    $upd->status = $newstatus; 
-    $upd->verified_by = $USER->id;
-    $upd->timeverified = time();
+//     $upd = new stdClass();
+//     $upd->id = $idp_id;
+//     $upd->status = $newstatus; 
+//     $upd->verified_by = $USER->id;
+//     $upd->timeverified = time();
     
-    $DB->update_record('local_myidpebi', $upd);
+//     $DB->update_record('local_myidpebi', $upd);
 
-    local_myidpebi_add_log($idp_id, $USER->id, 'verifikasi_atasan_1_ke_2', $oldstatus, $newstatus, 'Program IDP diverifikasi oleh Atasan.');
+//     local_myidpebi_add_log($idp_id, $USER->id, 'verifikasi_atasan_1_ke_2', $oldstatus, $newstatus, 'Program IDP diverifikasi oleh Atasan.');
 
-    $event = \local_myidpebi\event\idp_status_changed::create([
-        'objectid' => $idp_id,
-        'userid'   => $USER->id,
-        'context'  => $context,
-        'other'    => ['status_code' => 2]
-    ]);
-    $event->trigger();
+//     $event = \local_myidpebi\event\idp_status_changed::create([
+//         'objectid' => $idp_id,
+//         'userid'   => $USER->id,
+//         'context'  => $context,
+//         'other'    => ['status_code' => 2]
+//     ]);
+//     $event->trigger();
 
-    redirect($url, 'IDP telah diverifikasi selesai.', null, \core\output\notification::NOTIFY_SUCCESS);
-}
+//     redirect($url, 'IDP telah diverifikasi selesai.', null, \core\output\notification::NOTIFY_SUCCESS);
+// }
 
 // 3. LOGIKA AKSI VERIFIKASI SELESAI OLEH LDC (Status 2 -> 3)
 if (optional_param('verify_ldc', 0, PARAM_INT) && ($can_reset) && confirm_sesskey()) {
@@ -265,7 +266,7 @@ echo '                <small class="text-muted d-block" style="line-height: 1.2;
 if ($idp->status < 2) {
     echo '                    Menunggu penyelesaian Realisasi.';
 } else if ($idp->status == 2) {
-    echo '                    <span class="text-info font-weight-bold">Diverifikasi Atasan:</span><br>Menunggu verifikasi akhir LDC.';
+    echo '                    <span class="text-info font-weight-bold">Diverifikasi Atasan:</span><br>Menunggu verifikasi akhir.';
 } else {
     echo '                    Telah diverifikasi oleh Atasan.';
 }

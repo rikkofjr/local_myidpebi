@@ -97,7 +97,32 @@ if ($mform->is_cancelled()) {
     if ($actual_idp_id > 0) {
         // --- PROSES UPDATE ---
         $idp->id = $actual_idp_id;
+
+        $old_status = (int)$DB->get_field('local_myidpebi', 'status', ['id' => $actual_idp_id]);
         $DB->update_record('local_myidpebi', $idp);
+
+        //1. CATAT KE LOG IDP (local_myidpebi_log)
+        local_myidpebi_add_log(
+            $actual_idp_id,
+            $USER->id,
+            'update_idp',
+            $old_status,
+            $old_status, // Status tidak berubah (tetap di posisi semula, misal draft)
+            'Dokumen / Rincian IDP berhasil diperbarui oleh karyawan.'
+        );
+
+        // 2. CATAT KE MOODLE EVENT LOG
+        $event = \local_myidpebi\event\idp_saved::create([
+            'objectid' => $actual_idp_id,
+            'userid'   => $USER->id,
+            'context'  => context_system::instance(),
+            'other'    => [
+                'action' => 'update',
+                'crud'   => 'u' // 🟢 Set 'u' untuk Update
+            ]
+        ]);
+
+        $event->trigger();
         
         $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $actual_idp_id]);
         redirect($redirect_url, 'Program IDP berhasil diperbarui.', null, \core\output\notification::NOTIFY_SUCCESS);
@@ -107,9 +132,31 @@ if ($mform->is_cancelled()) {
         $idp->timecreated = time();
         
         $new_idp_id = $DB->insert_record('local_myidpebi', $idp);
+
+        // 1. CATAT KE LOG IDP (local_myidpebi_log)
+        local_myidpebi_add_log(
+            $new_idp_id,
+            $USER->id,
+            'create_idp',
+            0, // Status lama (Draft awal)
+            0, // Status baru (Draft / 0)
+            'Program IDP baru berhasil dibuat oleh karyawan.'
+        );
+
+        // 2. CATAT KE MOODLE EVENT LOG
+        $event = \local_myidpebi\event\idp_saved::create([
+            'objectid' => $new_idp_id,
+            'userid'   => $USER->id,
+            'context'  => context_system::instance(),
+            'other'    => [
+                'action' => 'create',
+                'crud'   => 'c' // 🟢 Set 'c' untuk Create
+            ]
+        ]);
+        $event->trigger();
         
         $redirect_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $new_idp_id]);
-        redirect($redirect_url, 'Program IDP berhasil dibuat, silahkan minta atasan / pembimbing anda untuk approval', null, \core\output\notification::NOTIFY_SUCCESS);
+        redirect($redirect_url, 'Program IDP berhasil dibuat, lakukan pengisian Rincian Aktivitas dan informasikan atasan anda untuk approval', null, \core\output\notification::NOTIFY_SUCCESS);
     }
 }
 
