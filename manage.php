@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/../../config.php');
+require_once(__DIR__ . '/lib.php');
 
 global $DB, $USER, $PAGE, $OUTPUT;
 
@@ -28,9 +29,10 @@ echo '<form method="get" action="manage.php" class="form-inline">';
 echo '<input type="text" name="search" class="form-control mr-2" placeholder="Cari Nama / NIK..." value="'.s($search).'">';
 echo '<select name="status_filter" class="form-control mr-2">
         <option value="-1">-- Semua Status --</option>
-        <option value="0" '.($status_filter === 0 ? 'selected' : '').'>Menunggu Approval</option>
-        <option value="1" '.($status_filter === 1 ? 'selected' : '').'>Disetujui / Proses</option>
-        <option value="2" '.($status_filter === 2 ? 'selected' : '').'>Selesai Diverifikasi</option>
+        <option value="0" '.($status_filter === 0 ? 'selected' : '').'>'.get_string('myidpebi:badge_status0', 'local_myidpebi').' </option>
+        <option value="1" '.($status_filter === 1 ? 'selected' : '').'>'.get_string('myidpebi:badge_status1', 'local_myidpebi').'</option>
+        <option value="2" '.($status_filter === 2 ? 'selected' : '').'>'.get_string('myidpebi:badge_status2', 'local_myidpebi').'</option>
+        <option value="3" '.($status_filter === 3 ? 'selected' : '').'>'.get_string('myidpebi:badge_status3', 'local_myidpebi').'</option>
       </select>';
 echo '<button type="submit" class="btn btn-primary">Filter</button>';
 if ($search || $status_filter !== -1) {
@@ -85,22 +87,16 @@ if ($records) {
           </tr></thead>';
     echo '<tbody>';
     foreach ($records as $idp) {
+        $status_info = local_myidpebi_get_status_info($idp->status);
+        
+        $status_text = $status_info->text;
+        $badge_class = $status_info->class;
         // Logika Status & Warna Badge
-        if ($idp->status == 2) {
-            $status_text = 'Selesai Diverifikasi';
-            $badge_class = 'badge-success';
-            
-            // Hitung total JP (mengambil data dari tabel aktivitas)
+        if ($idp->status == 3) {
             $total_jp = $DB->get_field_sql("SELECT SUM(jumlah_jp_realisasi) FROM {local_myidpebi_act} WHERE idp_id = ?", [$idp->id]);
             $display_jp = $total_jp ?: 0;
-        } else if ($idp->status == 1) {
-            $status_text = 'Disetujui / Proses';
-            $badge_class = 'badge-warning';
-            $display_jp = '-'; // Belum diverifikasi
         } else {
-            $status_text = 'Menunggu Approval';
-            $badge_class = 'badge-secondary';
-            $display_jp = '-'; // Belum diverifikasi
+            $display_jp = '-';
         }
         
         $view_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp->id]);
