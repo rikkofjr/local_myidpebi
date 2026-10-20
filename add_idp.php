@@ -38,6 +38,25 @@ if ($edit_idp_id) {
         throw new moodle_exception('nomodify', 'debug', '', 'IDP yang sudah berjalan tidak dapat diubah.');
     }
 
+    $editor_fields = [
+        'resume_kapabilitas', 
+        // 'tuntutan_sekarang_performance', 
+        // 'tuntutan_sekarang_kompetensi', 
+        // 'tuntutan_berikutnya_performance', 
+        // 'tuntutan_berikutnya_kompetensi', 
+        // 'tuntutan_lingkungan', 
+        // 'area_pengembangan_ditingkatkan', 
+        // 'area_pengembangan_diharapkan'
+    ];
+    foreach ($editor_fields as $field) {
+        if (isset($current_idp->{$field})) {
+            $current_idp->{$field} = [
+                'text' => $current_idp->{$field},
+                'format' => FORMAT_HTML
+            ];
+        }
+    }
+
     // Konversi 'atasan_id' di database menjadi 'nik_atasan' agar dikenali oleh form autocomplete
     $atasan_username = $DB->get_field('user', 'username', ['id' => $current_idp->atasan_id]);
     if ($atasan_username) {
@@ -69,7 +88,8 @@ if ($mform->is_cancelled()) {
     $idp->userid     = $USER->id;
     $idp->mulai_date = $fromform->mulai_date;
     $idp->akhir_date = $fromform->akhir_date;
-    $idp->resume_kapabilitas = $fromform->resume_kapabilitas;
+    // $idp->resume_kapabilitas = $fromform->resume_kapabilitas;
+    $idp->resume_kapabilitas = is_array($fromform->resume_kapabilitas) ? $fromform->resume_kapabilitas['text'] : $fromform->resume_kapabilitas;
     $idp->tuntutan_sekarang_performance = $fromform->tuntutan_sekarang_performance;
     $idp->tuntutan_sekarang_kompetensi = $fromform->tuntutan_sekarang_kompetensi;
     $idp->tuntutan_berikutnya_performance = $fromform->tuntutan_berikutnya_performance;

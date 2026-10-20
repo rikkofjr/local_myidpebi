@@ -80,8 +80,33 @@ class idp_form extends \moodleform {
         // ==========================================
         
         $mform->addElement('html', '<b>Resume Kapabilitas</b>');
-        
-        $mform->addElement('textarea', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 3, 'cols' => 100, 'placeholder' => 'Informasikan resume kapabilitas di posisi anda saat ini']);
+        $mform->addElement('html', '
+            <style>
+                /* Sembunyikan Menubar (Edit, View, Insert, Format, dll) */
+                .tox-menubar { display: none !important; }
+                
+                /* Sembunyikan Statusbar bawah (0 words, path) */
+                .tox-statusbar { display: none !important; }
+
+                /* Sembunyikan semua tombol toolbar KECUALI Bold, Numbered list, & Bullet list */
+                .tox-toolbar__group button:not([aria-label*="Bold"]):not([aria-label*="bold"]):not([aria-label*="Numbered"]):not([aria-label*="numbered"]):not([aria-label*="Bullet"]):not([aria-label*="bullet"]) {
+                    display: none !important;
+                }
+            </style>
+        ');
+        $editoroptions = [
+            'subdirs' => 0,
+            'maxfiles' => 0,
+            'trusttext' => false,
+            'context' => \context_system::instance(),
+            'customconfig' => [
+                'menubar' => false,
+                'statusbar' => false,
+                'toolbar' => 'bold numlist bullist',
+            ]
+        ];
+
+        $mform->addElement('editor', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 3], $editoroptions);
         $mform->setType('resume_kapabilitas', PARAM_RAW);
         $mform->addRule('resume_kapabilitas', 'Harus Diisi', 'required', null, 'client');
         

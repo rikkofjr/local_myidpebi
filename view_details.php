@@ -337,7 +337,7 @@ echo '  <thead class="table-light text-center align-middle">
         </thead>
         <tbody><tr>';
 
-echo '<td>' . s($idp->resume_kapabilitas) . '</td>';
+echo '<td>' . format_text($idp->resume_kapabilitas, FORMAT_HTML, ['context' => $context]) . '</td>';
 echo '<td>' . s($idp->tuntutan_sekarang_performance) . '</td>';
 echo '<td>' . s($idp->tuntutan_sekarang_kompetensi) . '</td>';
 echo '<td>' . s($idp->tuntutan_berikutnya_performance) . '</td>';
