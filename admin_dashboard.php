@@ -37,21 +37,23 @@ $total_idp = $DB->count_records_select('local_myidpebi', "timecreated >= ?", [$y
 // B. Mengambil Definisi Teks & Class Resmi dari lib.php untuk masing-masing status
 $status0_info = local_myidpebi_get_status_info(0); // Menunggu Approval
 $status1_info = local_myidpebi_get_status_info(1); // Disetujui / Proses
-$status2_info = local_myidpebi_get_status_info(2); // Selesai Diverifikasi
+$status2_info = local_myidpebi_get_status_info(2); // Selesai Diverifikasi Atasan
+$status3_info = local_myidpebi_get_status_info(3); // Selesai Validasi LDC
 
 // C. Hitung Riwayat Kuantitas Per Status Dokumen
 $pending_approval = $DB->count_records('local_myidpebi', ['status' => 0]);
-$running_idp       = $DB->count_records('local_myidpebi', ['status' => 1]);
-$verified_idp      = $DB->count_records('local_myidpebi', ['status' => 2]);
+$running_idp      = $DB->count_records('local_myidpebi', ['status' => 1]);
+$verified_idp     = $DB->count_records('local_myidpebi', ['status' => 2]);
+$completed_idp    = $DB->count_records('local_myidpebi', ['status' => 3]);
 
 // D. Hitung Tingkat Penyelesaian (Completion Rate)
-$completion_rate = ($total_idp > 0) ? round(($verified_idp / $total_idp) * 100, 1) : 0;
+$completion_rate = ($total_idp > 0) ? round((($verified_idp + $completed_idp) / $total_idp) * 100, 1) : 0;
 
-// E. Total JP Terpenuhi dari Dokumen Berstatus Selesai (Verified / 2)
-$total_jp_sql = "SELECT SUM(act.jumlah_jp) as total 
+// E. Total JP Terpenuhi dari Dokumen Berstatus Selesai (Verified / 2 atau 3)
+$total_jp_sql = "SELECT SUM(act.jumlah_jp_realisasi) as total 
                  FROM {local_myidpebi_act} act 
                  JOIN {local_myidpebi} idp ON act.idp_id = idp.id 
-                 WHERE idp.status = 2 AND act.deleted = 0";
+                 WHERE idp.status IN (2, 3) AND act.deleted = 0";
 $jp_res = $DB->get_record_sql($total_jp_sql);
 $total_jp = !empty($jp_res->total) ? $jp_res->total : 0;
 
@@ -133,61 +135,45 @@ $total_jp = !empty($jp_res->total) ? $jp_res->total : 0;
                             <td><span class="badge <?php echo $status2_info->class; ?>"><?php echo $status2_info->text; ?></span></td>
                             <td class="text-right font-weight-bold"><?php echo $verified_idp; ?> IDP</td>
                         </tr>
+                        <tr>
+                            <td><span class="badge <?php echo $status3_info->class; ?>"><?php echo $status3_info->text; ?></span></td>
+                            <td class="text-right font-weight-bold"><?php echo $completed_idp; ?> IDP</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4 mb-4">
+    <div class="col-md-8 mb-4">
         <div class="card h-100">
-            <div class="card-header bg-light"><strong><i class="fa fa-tag"></i> Top Aspek Kompetensi Karyawan</strong></div>
+            <div class="card-header bg-light"><strong><i class="fa fa-tasks"></i> Top Aktivitas CDP & Learning Activity</strong></div>
             <div class="card-body">
                 <?php
-                $aspek_sql = "SELECT aspek, COUNT(*) as qty 
-                              FROM {local_myidpebi_act} 
-                              WHERE deleted = 0 AND aspek IS NOT NULL AND aspek != '' AND aspek != '-'
-                              GROUP BY aspek 
-                              ORDER BY qty DESC 
-                              LIMIT 5";
-                $aspek_records = $DB->get_records_sql($aspek_sql);
-                
-                if (!empty($aspek_records)) {
-                    echo '<ul class="list-group list-group-flush">';
-                    foreach ($aspek_records as $rec) {
-                        echo "<li class='list-group-item d-flex justify-content-between align-items-center p-2'>
-                                <span style='font-size: 13px;'>" . s($rec->aspek) . "</span>
-                                <span class='badge badge-primary badge-pill'>{$rec->qty} Kali</span>
-                              </li>";
-                    }
-                    echo '</ul>';
+                // Menggunakan fungsi SQL CONCAT yang aman untuk menggabungkan tipe_aktivitas_cdp dan learning_activity dari tabel master
+                $db_family = $DB->get_dbfamily();
+                if ($db_family == 'postgres') {
+                    $concat_sql = "m.tipe_aktivitas_cdp || ' - ' || m.learning_activity";
                 } else {
-                    echo '<p class="text-muted text-center my-3">Belum ada data kompetensi.</p>';
+                    $concat_sql = "CONCAT(m.tipe_aktivitas_cdp, ' - ', m.learning_activity)";
                 }
-                ?>
-            </div>
-        </div>
-    </div>
 
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-header bg-light"><strong><i class="fa fa-tasks"></i> Top Jenis Kegiatan Pengembangan</strong></div>
-            <div class="card-body">
-                <?php
-                $jenis_sql = "SELECT jenis_kegiatan, COUNT(*) as qty 
-                              FROM {local_myidpebi_act} 
-                              WHERE deleted = 0 AND jenis_kegiatan IS NOT NULL AND jenis_kegiatan != '' 
-                              GROUP BY jenis_kegiatan 
+                $jenis_sql = "SELECT {$concat_sql} as label_kegiatan, COUNT(*) as qty 
+                              FROM {local_myidpebi_act} act 
+                              JOIN {local_myidpebi_learning_activity} m ON act.learning_activity = m.id 
+                              WHERE act.deleted = 0 AND m.learning_activity IS NOT NULL AND m.learning_activity != '' 
+                              GROUP BY m.tipe_aktivitas_cdp, m.learning_activity 
                               ORDER BY qty DESC 
                               LIMIT 5";
+                
                 $jenis_records = $DB->get_records_sql($jenis_sql);
                 
                 if (!empty($jenis_records)) {
                     echo '<ul class="list-group list-group-flush">';
                     foreach ($jenis_records as $rec) {
                         echo "<li class='list-group-item d-flex justify-content-between align-items-center p-2'>
-                                <span style='font-size: 13px;'> " . s($rec->jenis_kegiatan) . "</span>
-                                <span class='badge badge-success badge-pill'>{$rec->qty} Act</span>
+                                <span style='font-size: 13px;'><i class='fa fa-angle-right text-primary mr-2'></i> " . s($rec->label_kegiatan) . "</span>
+                                <span class='badge badge-success badge-pill'>{$rec->qty} Aktivitas</span>
                               </li>";
                     }
                     echo '</ul>';
