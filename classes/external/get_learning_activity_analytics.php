@@ -54,7 +54,7 @@ class get_learning_activity_analytics extends external_api {
                        SUM(act.jumlah_jp_realisasi) as total_jp_realisasi
                   FROM {local_myidpebi_act} act
                   JOIN {local_myidpebi} idp ON act.idp_id = idp.id
-                  JOIN {local_myidpebi_learning_activity} m ON act.learning_activity COLLATE utf8mb4_unicode_ci = CAST(m.id AS CHAR(100)) COLLATE utf8mb4_unicode_ci
+                  JOIN {local_myidpebi_learning_activity} m ON act.learning_activity_id COLLATE utf8mb4_unicode_ci = CAST(m.id AS CHAR(100)) COLLATE utf8mb4_unicode_ci
                  WHERE act.deleted = 0 
                    AND idp.mulai_date <= :year_end 
                    AND idp.akhir_date >= :year_start
