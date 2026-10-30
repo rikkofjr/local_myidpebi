@@ -42,9 +42,9 @@ class act_form extends \moodleform {
                 $jenis_opsi[$mk->id] = $mk->tipe_aktivitas_cdp .' - '. $mk->learning_activity;
             }
         }
-        $mform->addElement('select', 'learning_activity', 'Aktivitas pengembangan yang akan dilakukan', $jenis_opsi);
-        $mform->setType('learning_activity', PARAM_INT);
-        $mform->addRule('learning_activity', 'Harus Diisi', 'required', null, 'client');
+        $mform->addElement('select', 'learning_activity_id', 'Aktivitas pengembangan yang akan dilakukan', $jenis_opsi);
+        $mform->setType('learning_activity_id', PARAM_INT);
+        $mform->addRule('learning_activity_id', 'Harus Diisi', 'required', null, 'client');
 
         $mform->addElement('textarea', 'nama_activity', 'Detil Aktivitas', ['rows' => 4, 'cols' => 50,]);
         $mform->setType('nama_activity', PARAM_TEXT);
@@ -78,11 +78,11 @@ class act_form extends \moodleform {
         
         if ($status == 1 && $act_id) {
             // Ambil ID learning_activity langsung dari tabel aktivitas karyawan
-            $current_act = $DB->get_record('local_myidpebi_act', ['id' => $act_id], 'learning_activity');
+            $current_act = $DB->get_record('local_myidpebi_act', ['id' => $act_id], 'learning_activity_id');
             
             if ($current_act) {
                 // Tarik teks panduan evidence dari tabel master berdasarkan ID tersebut
-                $master_rule = $DB->get_record('local_myidpebi_learning_activity', ['id' => $current_act->learning_activity]);
+                $master_rule = $DB->get_record('local_myidpebi_learning_activity', ['id' => $current_act->learning_activity_id]);
                 
                 if ($master_rule) {
                     $clean_evidence = str_replace('|', '<br class="mb-1">', s($master_rule->bentuk_evidence));
@@ -145,8 +145,8 @@ class act_form extends \moodleform {
                 
                 // 2. Kunci input dropdown 'learning_activity' (atau 'learning_activity_id') menggunakan CSS pointer-events
                 // Dropdown tidak mendukung readonly, jadi kita matikan interaksi klik-nya agar tidak bisa diganti karyawan
-                if ($mform->elementExists('learning_activity')) {
-                    $mform->getElement('learning_activity')->updateAttributes([
+                if ($mform->elementExists('learning_activity_id')) {
+                    $mform->getElement('learning_activity_id')->updateAttributes([
                         'style' => 'background-color: #e9ecef; pointer-events: none; touch-action: none;',
                         'tabindex' => '-1'
                     ]);
@@ -210,7 +210,7 @@ class act_form extends \moodleform {
         // =========================================================================
 
         // Tangkap ID kegiatan (Tipe angka)
-        $activity_id = isset($data['learning_activity']) ? (int)$data['learning_activity'] : 0;
+        $activity_id = isset($data['learning_activity_id']) ? (int)$data['learning_activity_id'] : 0;
 
         if ($activity_id > 0) {
             // Pencarian ke database sekarang langsung menembak 'id' (Sangat cepat & aman)

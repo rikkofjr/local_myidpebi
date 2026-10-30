@@ -31,9 +31,9 @@ $PAGE->navbar->add('Dashboard IDP', new moodle_url('/local/myidpebi/index.php'))
 $view_details_url = new moodle_url('/local/myidpebi/view_details.php', ['id' => $idp_id]);
 $PAGE->navbar->add('Detail IDP (' . s($idp->nama_idp) . ')', $view_details_url);
 
-// Matikan deprecated strict notice PHP 8 secara sementara
+// Hapus ~E_STRICT agar kompatibel dengan PHP 8+
 $old_error_level = error_reporting();
-error_reporting($old_error_level & ~E_DEPRECATED & ~E_STRICT & ~E_NOTICE);
+error_reporting($old_error_level & ~E_DEPRECATED & ~E_NOTICE);
 
 // 1. Inisialisasi Form TERLEBIH DAHULU agar elemen 'evidence_file' terdaftar di sistem Moodle Form
 $mform = new \local_myidpebi\forms\act_form($url->out(false), [
@@ -59,7 +59,7 @@ if ($act_id) {
     
     // FIXED: Menyesuaikan properti DB asal ke field form split (_performance & _kompetensi)
 
-    $form_data->learning_activity            = (int)$activity->learning_activity;
+    $form_data->learning_activity_id            = (int)$activity->learning_activity_id;
     $form_data->nama_activity                   = $activity->nama_activity;
     $form_data->perencanaan_tanggal_mulai   = $activity->perencanaan_tanggal_mulai;
     $form_data->perencanaan_tanggal_selesai = $activity->perencanaan_tanggal_selesai;
@@ -106,7 +106,7 @@ if ($mform->is_cancelled()) {
     
  
     // FIXED: Mengambil data pecahan form untuk disimpan ke kolom DB masing-masing
-    $act->learning_activity = (int)$data->learning_activity;
+    $act->learning_activity_id = (int)$data->learning_activity_id;
     $act->nama_activity       = $data->nama_activity;
     $act->perencanaan_tanggal_mulai   = (int)$data->perencanaan_tanggal_mulai;
     $act->perencanaan_tanggal_selesai = (int)$data->perencanaan_tanggal_selesai;

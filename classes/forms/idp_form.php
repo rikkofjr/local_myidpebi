@@ -78,6 +78,10 @@ class idp_form extends \moodleform {
         // ==========================================
         // Isi rencana pengembangan
         // ==========================================
+
+        $mform->addElement('html', '<hr />');
+        $mform->addElement('html', '<b><small>Berikan tanda strip "-" jika form tersebut tidak perlu diisi oleh Anda </small></b>');
+        $mform->addElement('html', '<hr />');
         
         $mform->addElement('html', '<b>Resume Kapabilitas</b>');
         $mform->addElement('html', '
@@ -105,6 +109,7 @@ class idp_form extends \moodleform {
                 'toolbar' => 'bold numlist bullist',
             ]
         ];
+
 
         $mform->addElement('editor', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 3], $editoroptions);
         $mform->setType('resume_kapabilitas', PARAM_RAW);
@@ -146,10 +151,6 @@ class idp_form extends \moodleform {
         $mform->setType('area_pengembangan_diharapkan', PARAM_RAW);
         $mform->addRule('area_pengembangan_diharapkan', 'Harus Diisi', 'required', null, 'client');
         
-
-        $mform->addElement('html', '<hr />');
-        $mform->addElement('html', '<small>Berikan tanda strip "-" jika form tersebut tidak perlu diisi oleh Anda </small>');
-
         $this->add_action_buttons(true, 'Simpan Program');
     }
 

@@ -364,7 +364,7 @@ echo '<p class="text-muted"><small>* Klik tombol pensil untuk melakukan perubaha
 
 $sql_act = "SELECT a.*, m.learning_activity as nama_learning_activity, m.bentuk_evidence 
             FROM {local_myidpebi_act} a
-            LEFT JOIN {local_myidpebi_learning_activity} m ON a.learning_activity = m.id
+            LEFT JOIN {local_myidpebi_learning_activity} m ON a.learning_activity_id = m.id
             WHERE a.idp_id = :idp_id 
             ORDER BY a.deleted ASC, a.id ASC";
 
@@ -588,7 +588,7 @@ $logs = $DB->get_records_sql("
 
 if ($logs) {
     echo '<div class="mt-4 p-3 bg-light border rounded shadow-sm">';
-    echo '  <h6 class="text-secondary font-weight-bold mb-3"><i class="fa fa-history"></i> Riwayat & Timeline Aksi Status:</h6>';
+    echo '  <h6 class="text-secondary font-weight-bold mb-3"><i class="fa fa-history"></i> Timeline Status:</h6>';
     echo '  <ul class="list-unstyled mb-0">';
     
     foreach ($logs as $log) {

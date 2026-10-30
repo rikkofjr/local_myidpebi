@@ -165,5 +165,16 @@ function xmldb_local_myidpebi_upgrade($oldversion) {
         // Savepoint reached.
         upgrade_plugin_savepoint(true, 2026092302, 'local', 'myidpebi');
     }
+    if ($oldversion < 2026103000) {
+        $table = new xmldb_table('local_myidpebi_act');
+        $field = new xmldb_field('learning_activity', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'idp_id');
+
+        // Ganti nama field di database
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->rename_field($table, $field, 'learning_activity_id');
+        }
+
+        upgrade_plugin_savepoint(true, 2026103000, 'local', 'myidpebi');
+    }
     return true;
 }

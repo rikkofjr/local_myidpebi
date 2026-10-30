@@ -48,7 +48,7 @@
                 <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
                 <FIELD NAME="idp_id" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 
-                <FIELD NAME="learning_activity" TYPE="char" LENGTH="100" NOTNULL="true"/>
+                <FIELD NAME="learning_activity_id" TYPE="int" LENGTH="10" NOTNULL="true" COMMENT="Foreign key ke master learning activity"/>
                 <FIELD NAME="nama_activity" TYPE="text" NOTNULL="false" COMMENT="Detail Rincian Kegiatan IDP"/>
                 <FIELD NAME="jumlah_jp_perencanaan" TYPE="int" LENGTH="10" NOTNULL="true"/>
                 <FIELD NAME="perencanaan_tanggal_mulai" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" COMMENT="Tanggal mulai rencana pengembangan"/>
