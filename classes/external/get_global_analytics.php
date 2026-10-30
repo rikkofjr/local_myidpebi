@@ -27,7 +27,7 @@ class get_global_analytics extends external_api {
         $context = \context_system::instance();
         self::validate_context($context);
 
-        // Validasi capability (misal hanya admin/manajer yang berhak)
+        // Validasi capability
         require_capability('moodle/site:viewreports', $context);
 
         if (empty($year)) {
@@ -35,7 +35,7 @@ class get_global_analytics extends external_api {
         }
         $year_start_timestamp = strtotime("$year-01-01");
 
-        // Hitung metrik
+        // Hitung metrik dokumen IDP
         $total_idp = $DB->count_records_select('local_myidpebi', "timecreated >= ?", [$year_start_timestamp]);
         $pending_approval = $DB->count_records('local_myidpebi', ['status' => 0]);
         $running_idp = $DB->count_records('local_myidpebi', ['status' => 1]);
@@ -44,12 +44,11 @@ class get_global_analytics extends external_api {
 
         $completion_rate = ($total_idp > 0) ? round((($verified_idp + $completed_idp) / $total_idp) * 100, 2) : 0;
 
-        // Total JP Realisasi
-        $total_jp_sql = "SELECT SUM(act.jumlah_jp_realisasi) as total 
-                         FROM {local_myidpebi_act} act 
-                         JOIN {local_myidpebi} idp ON act.idp_id = idp.id 
-                         WHERE idp.status IN (2, 3) AND act.deleted = 0";
-        $jp_res = $DB->get_record_sql($total_jp_sql);
+        // 🟢 Total JP Berdasarkan Kolom total_jp_verified di Tabel local_myidpebi (Hanya untuk Status 3)
+        $total_jp_sql = "SELECT SUM(total_jp_verified) as total 
+                         FROM {local_myidpebi} 
+                         WHERE status = 3 AND timecreated >= ?";
+        $jp_res = $DB->get_record_sql($total_jp_sql, [$year_start_timestamp]);
         $total_jp = !empty($jp_res->total) ? (float)$jp_res->total : 0.00;
 
         // Ambil info teks status dari lib.php
@@ -77,7 +76,7 @@ class get_global_analytics extends external_api {
             'year' => new external_value(PARAM_INT, 'Tahun laporan'),
             'total_idp' => new external_value(PARAM_INT, 'Total dokumen IDP'),
             'completion_rate' => new external_value(PARAM_FLOAT, 'Persentase penyelesaian'),
-            'total_jp_verified' => new external_value(PARAM_FLOAT, 'Total jam pelajaran terverifikasi'),
+            'total_jp_verified' => new external_value(PARAM_FLOAT, 'Total jam pelajaran terverifikasi dari kolom utama'),
             'status_breakdown' => new \external_multiple_structure(
                 new external_single_structure([
                     'status_code' => new external_value(PARAM_INT, 'Kode status'),
