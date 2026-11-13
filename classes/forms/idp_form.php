@@ -211,8 +211,20 @@ class idp_form extends \moodleform {
                     $data->nik_atasan = trim($atasan_langsung_raw);
                 }
             }
+
+            // =================================================================
+            // 🎛️ DEFAULT VALUE: RESUME KAPABILITAS
+            // =================================================================
+            $default_resume = '<b>Kemapuan Berdasarkan kondisi Saat Ini</b><br><br><br>' . 
+                              '<b>Hasil terhadap assement</b><br><br>';
+
+            $data->resume_kapabilitas = [
+                'text' => $default_resume,
+                'format' => FORMAT_HTML
+            ];
+
         } 
-        // 🟢 KONDISI B: JIKA MODE EDIT (Mengambil data lama dari tabel local_myidpebi)
+        // KONDISI B: JIKA MODE EDIT (Mengambil data lama dari tabel local_myidpebi)
         else if (!empty($data->atasan_id)) {
             // Ambil record user pembimbing berdasarkan atasan_id (ID master user Moodle)
             $pembimbing_lama = $DB->get_record('user', ['id' => $data->atasan_id], 'id, username, email');
