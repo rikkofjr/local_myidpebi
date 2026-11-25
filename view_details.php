@@ -343,11 +343,11 @@ echo '  <thead class="table-light text-center align-middle">
 //tombol resume_kapabilitas (resume kapabilitas)
 echo '<td class="text-center align-middle">';
 if ($has_resume_content) {
-    echo '<button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
+    echo '<button type="button" class="btn btn-sm btn-primary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
     echo '    <i class="fa fa-file-text-o mr-1"></i> Lihat Resume';
     echo '</button>';
 } else {
-    echo '<button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
+    echo '<button type="button" class="btn btn-sm btn-secondary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
     echo '    <i class="fa fa-file-text-o mr-1"></i> Lihat Resume';
     echo '</button>';
     echo '<div class="small text-muted mt-1">Belum diisi</div>';
