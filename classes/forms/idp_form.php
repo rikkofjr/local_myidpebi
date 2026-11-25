@@ -86,32 +86,57 @@ class idp_form extends \moodleform {
         $mform->addElement('html', '<b>Resume Kapabilitas</b>');
         $mform->addElement('html', '
             <style>
-                /* Sembunyikan Menubar (Edit, View, Insert, Format, dll) */
-                .tox-menubar { display: none !important; }
-                
-                /* Sembunyikan Statusbar bawah (0 words, path) */
-                .tox-statusbar { display: none !important; }
+                /* Sembunyikan Statusbar bawah khusus resume_kapabilitas */
+                #fitem_id_resume_kapabilitas .tox-statusbar {
+                    display: none !important;
+                }
 
-                /* Sembunyikan semua tombol toolbar KECUALI Bold, Numbered list, & Bullet list */
-                .tox-toolbar__group button:not([aria-label*="Bold"]):not([aria-label*="bold"]):not([aria-label*="Numbered"]):not([aria-label*="numbered"]):not([aria-label*="Bullet"]):not([aria-label*="bullet"]) {
+                /* Sembunyikan semua item menubar kecuali yang ditandai sebagai Table */
+                #fitem_id_resume_kapabilitas .tox-menubar .tox-mbtn:not(.myidpebi-show-table) {
+                    display: none !important;
+                }
+
+                /* Sisakan Bold, Italic, Bullet list (UL), dan Numbered list (OL) di toolbar */
+                #fitem_id_resume_kapabilitas .tox-toolbar__group > button:not([aria-label*="Bold"]):not([aria-label*="Italic"]):not([aria-label*="Bullet list"]):not([aria-label*="Numbered list"]) {
                     display: none !important;
                 }
             </style>
+            <script>
+            (function() {
+                function tandaiMenuTable() {
+                    var btns = document.querySelectorAll("#fitem_id_resume_kapabilitas .tox-menubar .tox-mbtn");
+                    btns.forEach(function(btn) {
+                        var label = (btn.textContent || "").trim().toLowerCase();
+                        if (label === "table" || label === "tabel") {
+                            btn.classList.add("myidpebi-show-table");
+                        } else {
+                            btn.classList.remove("myidpebi-show-table");
+                        }
+                    });
+                }
+
+                // Jalankan beberapa kali karena TinyMCE/editor_tiny merender toolbar secara asinkron
+                tandaiMenuTable();
+                var observer = new MutationObserver(tandaiMenuTable);
+                observer.observe(document.body, { childList: true, subtree: true });
+                setTimeout(function() { observer.disconnect(); }, 5000);
+            })();
+            </script>
         ');
+
         $editoroptions = [
             'subdirs' => 0,
             'maxfiles' => 0,
             'trusttext' => false,
             'context' => \context_system::instance(),
             'customconfig' => [
-                'menubar' => false,
                 'statusbar' => false,
-                'toolbar' => 'bold numlist bullist',
+                'toolbar' => 'bold italic bullist numlist',
             ]
         ];
 
 
-        $mform->addElement('editor', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 3], $editoroptions);
+        $mform->addElement('editor', 'resume_kapabilitas', 'Resume Kapabilitas', ['rows' => 13], $editoroptions);
         $mform->setType('resume_kapabilitas', PARAM_RAW);
         $mform->addRule('resume_kapabilitas', 'Harus Diisi', 'required', null, 'client');
         
@@ -215,8 +240,13 @@ class idp_form extends \moodleform {
             // =================================================================
             // 🎛️ DEFAULT VALUE: RESUME KAPABILITAS
             // =================================================================
-            $default_resume = '<b>Kemapuan Berdasarkan kondisi Saat Ini</b><br><br><br>' . 
-                              '<b>Hasil terhadap assement</b><br><br>';
+            $default_resume = '
+                <b><h5>Job Profile</h5></b><br><br><br>
+                <b><h5>Competency Profile</h5></b><br><br><br>
+                <b><h5>Leadership Profile</h5></b><br><br><br>
+                <b><h5>Value Profile</h5></b><br><br><br>                
+            ';  
+                            
 
             $data->resume_kapabilitas = [
                 'text' => $default_resume,

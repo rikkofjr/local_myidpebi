@@ -315,6 +315,10 @@ echo '      </div>';
 echo '  </div>';
 echo '</div>';
 
+// Siapkan isi Resume Kapabilitas yang sudah diformat aman untuk modal
+$raw_resume = (string)($idp->resume_kapabilitas ?? '');
+$rendered_resume = format_text($raw_resume, FORMAT_HTML, ['context' => $context]);
+$has_resume_content = (trim(strip_tags($rendered_resume, '<img><table>')) !== '');
 
 // Table Analisa Kompetensi
 echo '<div class="table-responsive mb-4">';
@@ -336,8 +340,19 @@ echo '  <thead class="table-light text-center align-middle">
             </tr>
         </thead>
         <tbody><tr>';
-
-echo '<td>' . format_text($idp->resume_kapabilitas, FORMAT_HTML, ['context' => $context]) . '</td>';
+//tombol resume_kapabilitas (resume kapabilitas)
+echo '<td class="text-center align-middle">';
+if ($has_resume_content) {
+    echo '<button type="button" class="btn btn-sm btn-outline-primary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
+    echo '    <i class="fa fa-file-text-o mr-1"></i> Lihat Resume';
+    echo '</button>';
+} else {
+    echo '<button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" data-toggle="modal" data-target="#modalResumeKapabilitas">';
+    echo '    <i class="fa fa-file-text-o mr-1"></i> Lihat Resume';
+    echo '</button>';
+    echo '<div class="small text-muted mt-1">Belum diisi</div>';
+}
+echo '</td>';        
 echo '<td>' . s($idp->tuntutan_sekarang_performance) . '</td>';
 echo '<td>' . s($idp->tuntutan_sekarang_kompetensi) . '</td>';
 echo '<td>' . s($idp->tuntutan_berikutnya_performance) . '</td>';
@@ -614,5 +629,167 @@ if ($logs) {
     echo '  </ul>';
     echo '</div>';
 }
+
+// =========================================================================
+// POP-UP MODAL: RESUME KAPABILITAS
+// =========================================================================
+echo '
+<style>
+    #modalResumeKapabilitas .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+        overflow-x: auto;
+    }
+    #modalResumeKapabilitas .resume-kapabilitas-content img {
+        max-width: 100%;
+        height: auto;
+    }
+    #modalResumeKapabilitas .resume-kapabilitas-content table {
+        width: 100%;
+        max-width: 100%;
+        border-collapse: collapse;
+    }
+    #modalResumeKapabilitas .resume-kapabilitas-content th,
+    #modalResumeKapabilitas .resume-kapabilitas-content td {
+        border: 1px solid #dee2e6;
+        padding: 6px 8px;
+        vertical-align: top;
+    }
+    #modalResumeKapabilitas .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #modalResumeKapabilitas .modal-header .close {
+        margin-left: auto !important;
+        padding: 0.25rem 0.5rem;
+        opacity: 0.75;
+    }
+
+    #modalResumeKapabilitas .modal-header .close:hover {
+        opacity: 1;
+}   
+</style>
+
+<div class="modal fade" id="modalResumeKapabilitas" tabindex="-1" role="dialog" aria-labelledby="modalResumeKapabilitasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalResumeKapabilitasLabel">
+                    <i class="fa fa-id-card-o mr-1"></i> Resume Kapabilitas
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="resume-kapabilitas-content">';
+if ($has_resume_content) {
+    echo $rendered_resume;
+} else {
+    echo '<p class="text-muted mb-0">Belum ada data Resume Kapabilitas yang diisikan.</p>';
+}
+echo '          </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>';
+
+echo '
+<script>
+(function() {
+    var modalId = "modalResumeKapabilitas";
+    var backdropId = "myidpebiResumeBackdrop";
+
+    function getModal() {
+        return document.getElementById(modalId);
+    }
+
+    function showBackdrop() {
+        if (!document.getElementById(backdropId)) {
+            var bd = document.createElement("div");
+            bd.id = backdropId;
+            bd.className = "modal-backdrop fade show";
+            bd.style.zIndex = "1040";
+            bd.addEventListener("click", hideResumeModal);
+            document.body.appendChild(bd);
+        }
+    }
+
+    function removeBackdrop() {
+        var bd = document.getElementById(backdropId);
+        if (bd) {
+            bd.remove();
+        }
+    }
+
+    window.openResumeModal = function() {
+        var modal = getModal();
+        if (!modal) return;
+
+        if (window.jQuery && typeof window.jQuery(modal).modal === "function") {
+            try {
+                window.jQuery(modal).modal("show");
+                return;
+            } catch (e) {}
+        }
+
+        showBackdrop();
+        modal.classList.add("show");
+        modal.style.display = "block";
+        modal.style.zIndex = "1050";
+        modal.removeAttribute("aria-hidden");
+        document.body.classList.add("modal-open");
+    };
+
+    window.hideResumeModal = function() {
+        var modal = getModal();
+        if (!modal) return;
+
+        if (window.jQuery && typeof window.jQuery(modal).modal === "function") {
+            try {
+                window.jQuery(modal).modal("hide");
+            } catch (e) {}
+        }
+
+        modal.classList.remove("show");
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+        removeBackdrop();
+    };
+
+    document.addEventListener("click", function(e) {
+        var openBtn = e.target.closest("[data-target=\"#modalResumeKapabilitas\"]");
+        if (openBtn) {
+            e.preventDefault();
+            window.openResumeModal();
+            return;
+        }
+
+        var closeBtn = e.target.closest("#modalResumeKapabilitas [data-dismiss=\"modal\"]");
+        if (closeBtn) {
+            e.preventDefault();
+            window.hideResumeModal();
+            return;
+        }
+
+        var modal = getModal();
+        if (modal && e.target === modal) {
+            window.hideResumeModal();
+        }
+    });
+
+    document.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+            window.hideResumeModal();
+        }
+    });
+})();
+</script>';
 
 echo $OUTPUT->footer();
